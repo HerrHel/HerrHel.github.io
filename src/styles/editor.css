@@ -1,0 +1,136 @@
+/* ==================== TIPTAP EDITOR ==================== */
+.group-tiptap{min-height:40px;outline:none;font-size:0.88rem;line-height:1.65;color:var(--text)}
+.group-tiptap p{margin:0.2em 0}
+.group-tiptap p:first-child{margin-top:0}
+.group-tiptap p:last-child{margin-bottom:0}
+.group-tiptap .is-editor-empty:first-child::before{
+  content:attr(data-placeholder);float:left;
+  color:var(--text-muted);pointer-events:none;height:0;
+  font-style:italic;font-size:0.82rem
+}
+.group-tiptap:focus{outline:none}
+
+/* ---- 内联格式 ---- */
+.group-tiptap strong,.group-tiptap b,.group-body strong,.group-body b{font-weight:700}
+.group-tiptap span[style*="font-size"],.group-body span[style*="font-size"]{line-height:inherit}
+
+/* ---- 标题 ---- */
+.group-tiptap h1,.group-body h1{font-size:1.4rem;font-weight:600;margin:0.5em 0;border-left:3px solid var(--accent);padding-left:10px}
+.group-tiptap h2,.group-body h2{font-size:1.15rem;font-weight:600;margin:0.4em 0}
+.group-tiptap h3,.group-body h3{font-size:1rem;font-weight:600;margin:0.3em 0}
+
+/* ---- 列表 ---- */
+.group-tiptap ul,.group-tiptap ol,.group-body ul,.group-body ol{margin:0.3em 0;padding-left:1.5rem}
+.group-tiptap ol,.group-body ol{list-style:decimal}
+.group-tiptap ul,.group-body ul{list-style:disc}
+.group-tiptap li,.group-body li{margin:0.15em 0}
+
+/* ---- 内联卡片（书签/组引用）---- */
+.group-tiptap .group-inline-card .gic-remove{display:none}
+.group-tiptap .group-inline-card:hover{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent-glow),var(--shadow-sm);transform:translateY(-1px)}
+.group-tiptap .ProseMirror-selectednode{outline:2px solid var(--accent);border-radius:var(--radius-sm)}
+
+/* ---- 任务列表 ---- */
+.group-tiptap ul[data-type="taskList"]{
+  list-style:none;padding-left:0;margin:0.4em 0
+}
+.group-tiptap ul[data-type="taskList"] li{
+  display:flex;align-items:flex-start;gap:8px;margin:2px 0
+}
+.group-tiptap ul[data-type="taskList"] li label{
+  flex-shrink:0;margin-top:2px
+}
+.group-tiptap ul[data-type="taskList"] li label input[type="checkbox"]{
+  width:16px;height:16px;accent-color:var(--accent);cursor:pointer;
+  border-radius:4px;border:1.5px solid var(--border);appearance:auto
+}
+.group-tiptap ul[data-type="taskList"] li[data-checked="true"] > div > p{
+  text-decoration:line-through;color:var(--text-muted)
+}
+.group-tiptap ul[data-type="taskList"] li > div{
+  flex:1;min-width:0
+}
+.group-tiptap ul[data-type="taskList"] li > div > p{
+  margin:0;line-height:1.5
+}
+
+/* ==================== FOCUS MODE ==================== */
+.focus-view .focus-card-wrap{
+  display:flex;gap:0;
+  flex:1;min-height:0;
+}
+.focus-view .group-card-focus{
+  height:auto;max-height:none;
+  flex:1;min-height:0;
+  display:flex;flex-direction:column;
+  padding:20px 24px;overflow:hidden;
+  border-color:var(--accent);
+  box-shadow:0 0 0 2px var(--accent-glow);
+}
+.panel-content:has(.focus-view){padding:16px 0 16px 20px!important}
+.focus-view .group-card-focus .card-body{
+  display:flex;flex-direction:column;flex:1;min-height:0;
+}
+.focus-view .group-card-focus .group-card-head{display:none}
+.focus-view .group-card-focus .card-tags{display:none}
+.focus-view .group-card-focus .card-preview{display:none}
+.focus-view .group-card-focus .group-body{
+  flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;
+  -webkit-mask-image:none;mask-image:none;
+  font-size:0.92rem;line-height:1.85;
+}
+
+/* ==================== RICH TEXT TOOLBAR ==================== */
+.focus-richtext-toolbar{
+  display:flex;align-items:center;gap:4px;
+  flex-wrap:nowrap;
+  flex-shrink:0;
+  overflow-x:auto;
+  scrollbar-width:none;
+}
+.focus-richtext-toolbar::-webkit-scrollbar{display:none}
+.rt-group{
+  display:flex;gap:1px;
+}
+.rt-sep{
+  width:1px;height:18px;
+  background:var(--border);
+  flex-shrink:0;
+  margin:0 3px;
+}
+.rt-btn{
+  padding:3px 5px;
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  background:var(--surface);
+  color:var(--text-muted);
+  font-size:0.74rem;font-weight:600;
+  cursor:pointer;
+  min-width:24px;height:24px;
+  display:inline-flex;align-items:center;justify-content:center;
+  transition:all 0.12s ease;
+  white-space:nowrap;
+}
+.rt-btn svg{width:14px;height:14px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.rt-btn svg.filled{fill:currentColor;stroke:none}
+.rt-btn svg.filled path{fill:currentColor;stroke:none}
+.rt-btn:hover{background:var(--surface-hover);border-color:var(--border-hover);color:var(--text)}
+.rt-btn:active{background:var(--surface-active);transform:scale(0.95);transition-duration:0.05s}
+.rt-btn.active{background:var(--accent-light);border-color:var(--accent);color:var(--accent)}
+
+/* ==================== MOBILE FLOATING FORMAT BAR ==================== */
+.mfb{
+  position:fixed;left:0;right:0;bottom:0;z-index:9999;
+  display:flex;align-items:center;gap:4px;
+  padding:6px 10px env(safe-area-inset-bottom,8px);
+  background:var(--surface);border-top:1px solid var(--border);
+  overflow-x:auto;scrollbar-width:none;
+  transform:translateY(100%);opacity:0;
+  transition:transform .2s var(--ease-out),opacity .18s var(--ease-out);
+  box-shadow:0 -2px 12px rgba(0,0,0,.08);
+  -webkit-overflow-scrolling:touch;
+}
+.mfb::-webkit-scrollbar{display:none}
+.mfb.visible{transform:translateY(0);opacity:1}
+.mfb .ft-btn{min-width:30px;height:30px}
+.mfb .ft-color-wrap{position:relative;display:inline-flex}

@@ -1,0 +1,141 @@
+/* ==================== DRAG ==================== */
+.card.dragging,.group-inline-card.dragging,.group-ref-card.dragging{opacity:0.45;transform:scale(0.96)}
+.card.drag-over{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-glow)}
+/* 列表模式下拖拽目标更明显 */
+.list-view .card.drag-over,
+.list-view .group-card.drag-over{
+  background:var(--accent-light);
+  border-left:3px solid var(--accent);
+}
+/* ==================== CATEGORY MODAL DRAG (mobile) ==================== */
+.cat-item{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 10px;margin-bottom:4px;
+  background:var(--bg-alt);border-radius:var(--radius-base);
+  border:1px solid var(--border-light);
+}
+.cat-item-name{flex:1;font-size:0.85rem}
+.cat-grip{
+  display:none;
+  width:24px;height:24px;flex-shrink:0;
+  align-items:center;justify-content:center;
+  color:var(--text-muted);cursor:grab;
+  touch-action:none;-webkit-touch-callout:none;
+  margin:-6px 0 -6px -4px;padding:6px 4px;
+}
+.cat-grip svg{width:14px;height:14px}
+.cat-grip:active{cursor:grabbing;color:var(--accent)}
+@media(max-width:768px){.cat-grip{display:flex}}
+.cat-drag-ghost{
+  opacity:0!important;border:none!important;
+  box-shadow:none!important;pointer-events:none;
+}
+@keyframes catDragPop{
+  0%{transform:scale(0.9);opacity:0.6}
+  50%{transform:scale(1.06)}
+  100%{transform:scale(1.04);opacity:0.92}
+}
+.cat-drag-float{
+  position:fixed;z-index:10000;
+  pointer-events:none;
+  display:flex;align-items:center;gap:8px;
+  padding:8px 10px;
+  background:var(--surface);border:2px solid var(--accent);
+  border-radius:var(--radius-base);
+  box-shadow:0 12px 36px rgba(0,0,0,0.22),0 4px 12px rgba(0,0,0,0.12);
+  opacity:0.92;transform:scale(1.04);
+  animation:catDragPop 0.2s cubic-bezier(.34,1.56,.64,1) forwards;
+  font-size:0.85rem;
+}
+.cat-drag-float .cat-grip{display:none}
+.cat-drag-float .btn-xs{display:none}
+.cat-dragging-active{-webkit-user-select:none;user-select:none}
+
+/* ---- Cross-group drag visual feedback ---- */
+.group-card.drag-over{
+  box-shadow:0 0 0 2px var(--accent),0 8px 24px rgba(0,0,0,0.12)!important;
+  transform:scale(1.02);
+  transition:box-shadow 0.15s,transform 0.15s;
+}
+.group-card.drag-over .group-card-accent{
+  opacity:1;height:4px
+}
+
+/* ==================== BATCH DRAG HANDLE (mobile) ==================== */
+.card-list-inner{
+  display:contents;
+}
+.batch-drag-handle{
+  display:none;
+  position:absolute;top:50%;right:10px;
+  transform:translateY(-50%);
+  width:32px;height:32px;
+  align-items:center;justify-content:center;
+  cursor:grab;touch-action:none;
+  color:var(--text-muted);z-index:10;
+  border-radius:var(--radius-md);
+  -webkit-touch-callout:none;
+  transition:background 0.15s ease,color 0.15s ease;
+}
+.batch-drag-handle:active{
+  cursor:grabbing;
+  background:var(--accent-light);
+  color:var(--accent);
+}
+.batch-drag-handle svg{width:16px;height:16px}
+
+/* 仅移动端显示拖拽手柄 */
+@media(max-width:768px){
+  .batch-drag-handle{display:flex}
+  /* 拖拽手柄显示时隐藏展开按钮 */
+  .list-view .card:has(.batch-drag-handle) .list-expand-btn{display:none}
+}
+
+/* 拖拽中的卡片（原元素跟手） */
+.card.card-is-dragging{
+  transform:scale(1.03)!important;
+  box-shadow:0 8px 24px rgba(0,0,0,0.18),0 4px 12px rgba(0,0,0,0.12)!important;
+  background:var(--surface)!important;
+  border:1px solid var(--border)!important;
+  border-radius:var(--radius-lg);
+  opacity:1!important;
+  pointer-events:none;
+}
+.list-view .card.card-is-dragging{
+  transform:scale(1.02)!important;
+  box-shadow:0 12px 36px rgba(0,0,0,0.2),0 4px 12px rgba(0,0,0,0.1)!important;
+}
+
+/* 拖拽占位符（原位淡出） */
+.card.card-drag-placeholder{
+  opacity:0.25;
+  background:var(--bg-alt);
+  box-shadow:none;
+  border:2px dashed var(--accent);
+  border-radius:var(--radius-lg);
+  flex-shrink:0;
+}
+
+/* ---- 拖拽插入光标指示器 ---- */
+.drag-cursor{
+  position:fixed;
+  width:2px;
+  height:1.4em;
+  background:var(--accent);
+  border-radius:1px;
+  pointer-events:none;
+  z-index:10001;
+  opacity:0;
+  transform:translateX(-1px);
+  transition:opacity 0.12s;
+  box-shadow:0 0 4px var(--accent-glow);
+}
+.drag-cursor.visible{
+  opacity:1;
+  animation:dragCursorBlink 1s ease-in-out infinite;
+}
+@keyframes dragCursorBlink{
+  0%,100%{opacity:1}
+  50%{opacity:0.3}
+}
+

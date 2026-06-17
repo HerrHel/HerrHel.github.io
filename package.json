@@ -1,0 +1,42 @@
+{
+  "name": "linkvault",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint src/",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^4.1.8",
+    "@vue/test-utils": "^2.4.11",
+    "eslint": "^10.4.1",
+    "jsdom": "^29.1.1",
+    "purgecss": "^8.0.0",
+    "vite": "^8.0.16",
+    "vite-plugin-pwa": "^1.3.0",
+    "vitest": "^4.1.8"
+  },
+  "dependencies": {
+    "@tiptap/core": "^3.26.1",
+    "@tiptap/extension-color": "^3.26.1",
+    "@tiptap/extension-history": "^3.26.1",
+    "@tiptap/extension-placeholder": "^3.26.1",
+    "@tiptap/extension-task-item": "^3.26.1",
+    "@tiptap/extension-task-list": "^3.26.1",
+    "@tiptap/extension-text-style": "^3.26.1",
+    "@tiptap/extension-underline": "^3.26.1",
+    "@tiptap/pm": "^3.26.1",
+    "@tiptap/starter-kit": "^3.26.1",
+    "@vitejs/plugin-vue": "^6.0.7",
+    "dexie": "^4.4.3",
+    "dompurify": "^3.4.8",
+    "nanoid": "^5.1.11",
+    "pinia": "^3.0.4",
+    "vue": "^3.5.35"
+  }
+}

@@ -1,0 +1,38 @@
+/* ==================== APP LAYOUT ==================== */
+.lv-panel{
+  display:flex;
+  height:100vh;
+  max-height:100vh;
+  overflow:hidden;
+}
+
+
+/* ==================== MAIN PANEL ==================== */
+.panel-main{
+  flex:1;display:flex;flex-direction:row;
+  overflow:hidden;
+  min-width:0;
+}
+.panel-main-inner{
+  flex:1;display:flex;flex-direction:column;
+  overflow:hidden;
+  min-width:0;
+  position:relative;
+}
+.filter-bar-wrap{
+  position:relative;
+  flex-shrink:0;
+}
+
+
+/* ==================== CONTENT AREA ==================== */
+.panel-content{
+  flex:1;display:flex;flex-direction:column;
+  overflow-y:auto;overflow-x:hidden;
+  padding:16px 20px 80px;
+}
+.card-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:12px;
+}

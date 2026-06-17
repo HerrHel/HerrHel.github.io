@@ -1,0 +1,80 @@
+<template>
+  <nav class="icon-rail" :class="{ open: uiStore.railOpen }" aria-label="导航">
+    <div class="rail-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+      Link<span>Vault</span>
+    </div>
+    <div class="rail-section-label">分类</div>
+    <div class="rail-nav" id="railNav">
+      <!-- Phase 2: Vue 模板渲染替代 innerHTML -->
+      <button
+        v-for="cat in categories"
+        :key="cat.id"
+        class="rail-item"
+        :class="{ active: curCat === cat.id }"
+        :data-cat-id="cat.id"
+        :draggable="cat.id !== 'all' && cat.id !== 'uncategorized'"
+        @click="selectCat(cat.id)"
+      >
+        <span v-html="getCategoryIcon(cat.icon)"></span>
+        {{ cat.name }}
+        <span class="rail-count">{{ cardCounts[cat.id] || 0 }}</span>
+      </button>
+    </div>
+    <div class="rail-storage" id="railStorage">
+      <div v-if="storageInfo" style="flex:1;min-width:0">
+        <div style="height:4px;background:var(--bg-alt);border-radius:2px;overflow:hidden">
+          <div class="rail-storage-bar" :style="{ width: storageInfo.percent + '%', background: storageBarColor }"></div>
+        </div>
+      </div>
+      <span v-if="storageInfo" class="rail-storage-text">
+        {{ storageInfo.label }}
+        <span class="rail-storage-pct">({{ storageInfo.percent }}%)</span>
+      </span>
+    </div>
+    <div class="rail-bottom">
+      <button class="rail-item" id="btnManageCats" @click="openCatModalNav">
+        <span v-html="I.settings"></span>
+        管理分类
+      </button>
+      <button class="theme-toggle" @click="toggleTheme" aria-label="切换深浅色主题">
+        <span class="icon-sun" v-html="I.sun"></span>
+        <span class="icon-moon" v-html="I.moon"></span>
+        切换主题
+      </button>
+    </div>
+  </nav>
+</template>
+<script setup>
+import { computed } from 'vue'
+import { useDataStore } from '../../stores/data.js'
+import { useUIStore } from '../../stores/ui.js'
+import { toggleTheme as _toggleTheme } from '../../lib/theme.js'
+import { openCatModal } from '../../composables/ui/useUI.js'
+import { I, getCategoryIcon } from '../../config/icons.js'
+
+const dataStore = useDataStore()
+const uiStore = useUIStore()
+
+const categories = computed(() => dataStore.categories)
+const curCat = computed(() => uiStore.curCat)
+const cardCounts = computed(() => dataStore.cardCounts)
+
+const storageInfo = computed(() => {
+  try { return dataStore.getStorageInfo() } catch { return null }
+})
+
+const storageBarColor = computed(() => {
+  if (!storageInfo.value) return 'var(--accent)'
+  const p = storageInfo.value.percent
+  return p > 90 ? 'var(--danger)' : p > 70 ? 'var(--warn)' : 'var(--accent)'
+})
+
+function selectCat(id) {
+  uiStore.curCat = id
+  uiStore.focusedGroupId = null
+}
+
+function toggleTheme() { _toggleTheme() }
+function openCatModalNav() { openCatModal() }
+</script>

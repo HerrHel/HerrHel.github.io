@@ -1,0 +1,280 @@
+<template>
+  <div class="modal-mask" role="dialog" aria-modal="true" aria-label="Category" id="catModal" :class="{ open: store.catModalOpen }" @click.self="onClose">
+    <div class="modal">
+      <div class="modal-head"><h2>管理分类</h2><button class="modal-close" @click="onClose" title="关闭" v-html="I.close"></button></div>
+      <div class="modal-body">
+        <div class="flex-center gap-2 mb-3">
+          <input type="text" class="form-input flex-1" v-model="newName" placeholder="新分类名称" aria-label="新分类名称" @keydown.enter="onAddCat">
+          <button class="btn btn-primary btn-sm" @click="onAddCat">添加</button>
+        </div>
+        <div class="cat-sort-list" ref="catListRef">
+          <div class="list-item no-drag">
+            <span class="flex-1">{{ uncategorizedCat.name }}</span>
+          </div>
+          <div v-for="cat in sortableList" :key="cat.id" class="list-item" :data-cat-id="cat.id">
+            <span class="drag-handle" v-html="I.grip"></span>
+            <template v-if="editingId === cat.id">
+              <input class="form-input flex-1" v-model="editingName" aria-label="分类名称" @keydown.enter="confirmRename" @keydown.escape="cancelRename" :ref="setEditInputRef" style="height:30px">
+              <button class="btn btn-primary btn-sm" @click="confirmRename" title="确认重命名">✓</button>
+            </template>
+            <template v-else>
+              <span class="flex-1">{{ cat.name }}</span>
+              <button class="btn-xs icon-xs" @click="startRename(cat)" title="编辑" v-html="I.edit"></button>
+              <button class="btn-xs btn-danger icon-xs" @click="onDelete(cat.id)" title="删除" v-html="I.trash"></button>
+            </template>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { useAppStore } from '../../stores/app.js'
+import { useDataStore } from '../../stores/data.js'
+import { addNewCategory } from '../../utils.js'
+import { toast } from '../../lib/toast.js'
+import { I } from '../../config/icons.js'
+import { useInlineRename } from '../../composables/ui/useInlineRename.js'
+
+const store = useAppStore()
+const dataStore = useDataStore()
+const newName = ref('')
+const { editingId, editingName, setEditInputRef, startRename, confirmRename, cancelRename } = useInlineRename(store, 'renameCategory')
+const catListRef = ref(null)
+
+const uncategorizedCat = computed(() => dataStore.categories.find(c => c.id === 'uncategorized') || { id: 'uncategorized', name: '未分类' })
+
+const sortableList = ref([])
+
+watch(() => dataStore.selectableCategories, (val) => {
+  sortableList.value = val.filter(c => c.id !== 'uncategorized').map(c => ({ ...c }))
+}, { immediate: true, deep: true })
+
+// ── 拖拽排序 ──
+const EDGE = 50
+const SPEED = 10
+
+let drag = null
+let scrollRaf = null
+
+function getSortableItems() {
+  if (!catListRef.value) return []
+  return Array.from(catListRef.value.querySelectorAll('.list-item[data-cat-id]'))
+}
+
+function onPointerDown(e) {
+  const handle = e.target.closest('.drag-handle')
+  if (!handle) return
+  const item = handle.closest('.list-item[data-cat-id]')
+  if (!item || !catListRef.value) return
+
+  e.preventDefault()
+  item.setPointerCapture(e.pointerId)
+
+  const rect = item.getBoundingClientRect()
+  const allItems = getSortableItems()
+  const idx = allItems.indexOf(item)
+
+  const ph = document.createElement('div')
+  ph.className = 'list-item cat-placeholder'
+  ph.style.height = rect.height + 'px'
+  catListRef.value.insertBefore(ph, item)
+
+  document.body.appendChild(item)
+  item.classList.add('cat-dragging')
+  item.style.position = 'fixed'
+  item.style.left = rect.left + 'px'
+  item.style.top = rect.top + 'px'
+  item.style.width = rect.width + 'px'
+  item.style.margin = '0'
+  item.style.zIndex = '9999'
+  item.style.transition = 'none'
+
+  drag = {
+    el: item,
+    placeholder: ph,
+    startY: e.clientY,
+    initialTop: rect.top,
+    lastY: e.clientY,
+    itemHeight: rect.height,
+    currentIndex: idx,
+    pointerId: e.pointerId
+  }
+
+  document.addEventListener('pointermove', onPointerMove, { passive: false })
+}
+
+function onPointerMove(e) {
+  if (!drag || e.pointerId !== drag.pointerId) return
+  e.preventDefault()
+  drag.lastY = e.clientY
+
+  const top = drag.initialTop + (drag.lastY - drag.startY)
+  drag.el.style.top = top + 'px'
+
+  const allItems = getSortableItems().filter(c => c !== drag.el)
+  let newIndex = allItems.length
+  for (let i = 0; i < allItems.length; i++) {
+    if (allItems[i] === drag.placeholder) continue
+    const r = allItems[i].getBoundingClientRect()
+    if (top + drag.itemHeight / 2 < r.top + r.height / 2) {
+      newIndex = i
+      break
+    }
+  }
+  if (newIndex !== drag.currentIndex) {
+    drag.currentIndex = newIndex
+    const refEl = allItems[newIndex]
+    if (refEl) catListRef.value.insertBefore(drag.placeholder, refEl)
+    else catListRef.value.appendChild(drag.placeholder)
+  }
+
+  // 边缘滚动
+  const scrollEl = catListRef.value
+  const scrollRect = scrollEl.getBoundingClientRect()
+  let delta = 0
+  if (drag.lastY - scrollRect.top < EDGE && scrollEl.scrollTop > 0) {
+    delta = -Math.round(SPEED * (1 - Math.max(0, drag.lastY - scrollRect.top) / EDGE))
+  } else if (scrollRect.bottom - drag.lastY < EDGE) {
+    const maxScroll = scrollEl.scrollHeight - scrollEl.clientHeight - scrollEl.scrollTop
+    if (maxScroll > 0) delta = Math.min(Math.round(SPEED * (1 - Math.max(0, scrollRect.bottom - drag.lastY) / EDGE)), maxScroll)
+  }
+  if (delta) scrollEl.scrollTop += delta
+}
+
+function onPointerUp(e) {
+  if (!drag || e.pointerId !== drag.pointerId) return
+  document.removeEventListener('pointermove', onPointerMove)
+
+  const d = drag
+  drag = null
+
+  d.el.classList.remove('cat-dragging')
+  d.el.style.position = ''
+  d.el.style.left = ''
+  d.el.style.top = ''
+  d.el.style.width = ''
+  d.el.style.margin = ''
+  d.el.style.zIndex = ''
+  d.el.style.transition = ''
+
+  d.placeholder.parentNode.insertBefore(d.el, d.placeholder)
+  d.placeholder.remove()
+
+  // 重建顺序
+  const allItems = getSortableItems()
+  const newOrder = []
+  allItems.forEach(item => {
+    const catId = item.dataset.catId
+    if (catId) {
+      const found = sortableList.value.find(c => c.id === catId)
+      if (found) newOrder.push(found)
+    }
+  })
+  if (newOrder.length === sortableList.value.length) {
+    sortableList.value = newOrder
+    const special = dataStore.categories.filter(c => c.id === 'all' || c.id === 'uncategorized')
+    dataStore.categories = [...special, ...newOrder]
+    store.debouncedSave()
+    toast('分类顺序已更新')
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('pointerdown', onPointerDown, { passive: false })
+  document.addEventListener('pointerup', onPointerUp)
+  document.addEventListener('pointercancel', onPointerUp)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('pointerdown', onPointerDown)
+  document.removeEventListener('pointerup', onPointerUp)
+  document.removeEventListener('pointercancel', onPointerUp)
+  document.removeEventListener('pointermove', onPointerMove)
+})
+
+function onClose() { store.catModalOpen = false }
+
+function onAddCat() {
+  if (addNewCategory(newName.value, store)) newName.value = ''
+}
+
+function onDelete(id) {
+  store.deleteCategory(id)
+  store.save()
+  toast('分类已删除')
+}
+</script>
+
+<style scoped>
+#catModal .modal {
+  overflow: hidden;
+}
+
+.cat-sort-list {
+  max-height: 50vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+}
+
+.cat-sort-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.cat-sort-list::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+.list-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: grab;
+  user-select: none;
+  transition: background-color 0.15s, opacity 0.15s;
+}
+
+.list-item:active {
+  cursor: grabbing;
+}
+
+.drag-handle {
+  display: flex;
+  align-items: center;
+  color: var(--text-muted);
+  opacity: 0.4;
+  flex-shrink: 0;
+  cursor: grab;
+  touch-action: none;
+}
+
+.drag-handle :deep(svg) {
+  width: 16px;
+  height: 16px;
+}
+
+.no-drag {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.cat-placeholder {
+  background: var(--accent-bg);
+  border: 2px dashed var(--accent);
+  border-radius: var(--radius);
+  opacity: 0.5;
+}
+
+.cat-dragging {
+  opacity: 0.9;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  touch-action: none;
+}
+</style>

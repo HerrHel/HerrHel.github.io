@@ -1,0 +1,244 @@
+/* ==================== RESPONSIVE ==================== */
+.hamburger-btn{
+  display:none;
+  width:36px;height:36px;padding:6px;
+  border:none;background:transparent;
+  color:var(--text);cursor:pointer;
+  border-radius:var(--radius-base);
+  flex-shrink:0;
+}
+.hamburger-btn>span{display:contents}
+.hamburger-btn svg{width:100%;height:100%}
+.overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,0.35);
+  z-index:1500;
+}
+
+@media(max-width:768px){
+  /* === Hamburger & Rail === */
+  .hamburger-btn{display:flex;align-items:center;justify-content:center}
+  #resizeLeft{display:none}
+  .icon-rail{
+    position:fixed;left:0;top:0;height:100vh;width:260px;
+    z-index:2000;
+    transform:translateX(-100%);
+    transition:transform 0.3s var(--ease-out);
+    border-right:1px solid var(--border);
+    box-shadow:4px 0 24px rgba(0,0,0,0.12);
+  }
+  .icon-rail.swiping{transition:none!important}
+  .icon-rail.open{transform:translateX(0)}
+  .overlay.show{display:block;animation:fadeIn .2s ease}
+
+  /* === Header: compact 2-row grid === */
+  .panel-header{
+    position:relative;
+    padding:0 14px;
+    height:auto;
+    grid-template-columns:1fr auto;
+    grid-template-rows:auto auto;
+    gap:8px 10px;
+    transition:padding 0.25s var(--ease-out);
+  }
+  .header-left{grid-row:1;grid-column:1;gap:6px}
+  .header-right{grid-row:1;grid-column:2;gap:6px}
+  .header-search{
+    position:static;transform:none;
+    grid-row:2;grid-column:1/-1;
+    max-width:none;width:100%;justify-self:stretch;
+    max-height:48px;opacity:1;overflow:hidden;
+    padding-bottom:8px;
+    transition:max-height 0.3s var(--ease-out),opacity 0.2s ease,margin 0.3s ease;
+  }
+  .search-input{height:34px;font-size:0.82rem}
+
+  /* Search toggle button (hidden by default, shown when search collapsed) */
+  .search-toggle-btn{
+    display:none;
+    width:32px;height:32px;
+    align-items:center;justify-content:center;
+    border-radius:var(--radius-md);
+    color:var(--text-muted);background:transparent;
+    border:none;cursor:pointer;flex-shrink:0;
+    transition:color 0.15s ease,background 0.15s ease;
+  }
+  .search-toggle-btn>span{display:contents}
+  .search-toggle-btn svg{width:16px;height:16px}
+  .search-toggle-btn:active{background:var(--surface-active);color:var(--text)}
+
+  /* === Stage 1: search collapsed === */
+  .scrolled-search .header-search{
+    max-height:0;opacity:0;
+    margin:0;padding:0;
+    pointer-events:none;
+  }
+  .scrolled-search .search-toggle-btn{display:inline-flex}
+  .scrolled-search .panel-header{
+    padding:6px 14px;
+    grid-template-rows:auto;
+  }
+  .scrolled-search .filter-row{height:auto;min-height:auto;max-height:none;padding:4px 12px}
+
+  /* === Stage 2: header simplified — hamburger left, category center === */
+  .scrolled-header .panel-header{
+    padding:0 14px;
+    grid-template-columns:auto 1fr auto;
+    align-items:stretch;
+  }
+  .scrolled-header .header-left{
+    grid-column:1/-1;
+    display:flex;align-items:center;
+    position:relative;
+  }
+  .scrolled-header .hamburger-btn{
+    flex-shrink:0;
+    width:32px;height:32px;
+  }
+  .scrolled-header .panel-breadcrumb{
+    position:absolute;left:50%;transform:translateX(-50%);
+    font-size:0.82rem;font-weight:600;
+    color:var(--text);
+    white-space:nowrap;pointer-events:none;
+  }
+  .scrolled-header .panel-count{display:none}
+  .scrolled-header .header-search{display:none}
+  .scrolled-header .search-toggle-btn{display:inline-flex}
+  .scrolled-header .header-right{
+    position:absolute;right:14px;top:0;bottom:0;
+    display:flex;align-items:center;gap:4px;
+  }
+  .scrolled-header .search-toggle-btn,
+  .scrolled-header .lt-btn{
+    width:32px;height:32px;
+  }
+
+  /* === Content area === */
+  .panel-content{padding:10px 12px 80px}
+  #btnToggleDetail{display:none!important}
+  #btnBatchHeader{display:inline-flex!important}
+  .filter-row.focus-active #btnBatchHeader{display:none!important}
+  .form-row{grid-template-columns:1fr}
+  .detail-panel.open{width:var(--detail-width,280px)}
+  .detail-inner{min-width:var(--detail-width,280px)}
+
+  /* === Hide layout mode toggle on mobile (locked to list) === */
+  .sp-section-layout{display:none!important}
+
+  /* === Filter row: compact single row === */
+  .filter-row{
+    flex-wrap:nowrap;
+    height:auto;min-height:auto;max-height:none;
+    padding:6px 12px;
+    gap:8px;
+  }
+  .filter-row #filterTools{flex:1 1 0;min-width:0;order:1}
+  .filter-row .attr-filter-wrap{flex:0 0 auto}
+  .filter-row #focusBack{order:2}
+  .filter-row #addWrap{order:3}
+  .filter-row #btnBatchHeader{order:4;flex-shrink:0}
+
+
+  /* Mobile detail panel → bottom drawer */
+  .detail-panel{
+    position:fixed;bottom:0;left:0;right:0;top:auto;
+    max-height:65vh;width:100%!important;
+    border-radius:var(--radius-xl) var(--radius-xl) 0 0;
+    transform:translateY(100%);
+    transition:transform 0.3s var(--ease-out);
+    z-index:1800;
+    box-shadow:0 -4px 24px rgba(0,0,0,0.15);
+  }
+  /* dp-overlay mobile styles moved to group.css with proper .show specificity */
+  .detail-panel.open{transform:translateY(0)}
+  .detail-panel.swiping{transition:none!important}
+  .detail-drag-handle{
+    display:flex;justify-content:center;
+    padding:12px 0 8px;cursor:ns-resize;
+    flex-shrink:0;
+  }
+  .detail-drag-handle::before{
+    content:'';width:36px;height:4px;
+    border-radius:2px;
+    background:var(--border-hover);
+    transition:background 0.15s ease,width 0.15s ease;
+  }
+  .detail-drag-handle:active::before{
+    width:48px;background:var(--accent);
+  }
+  /* === Focus mode === */
+  .focus-view{flex-direction:column!important;gap:0;padding-bottom:0}
+  .panel-content:has(.focus-view){padding:10px 12px!important;overflow:hidden}
+  .focus-view .group-card-focus{flex:1;min-height:0;padding:12px 14px 60px}
+  .focus-toolbar-side{display:none!important}
+  #focusBack{
+    overflow-x:auto;overflow-y:hidden;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  #focusBack::-webkit-scrollbar{display:none}
+  .ft-format-group{flex-shrink:0}
+  .ft-section-actions{flex-shrink:0}
+  .ft-div{margin:0 4px;height:18px}
+  .ft-sep{margin:0 3px;height:14px}
+  .ft-stat-pill{font-size:0.68rem;padding:2px 6px}
+
+  /* === Modals → bottom sheet === */
+  .modal{
+    position:fixed;bottom:0;left:0;right:0;top:auto;
+    max-height:90vh;width:100%!important;
+    border-radius:var(--radius-xl) var(--radius-xl) 0 0;
+    margin:0;
+    animation:slideUp 0.28s var(--ease-out);
+    overflow-y:auto;
+  }
+  @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  #catModal .modal{
+    position:fixed;bottom:0;left:0;right:0;top:auto;
+    max-height:90vh;width:100%!important;
+    border-radius:var(--radius-xl) var(--radius-xl) 0 0;
+    margin:0;
+    animation:slideUp 0.28s var(--ease-out);
+    overflow-y:auto;
+  }
+  .modal-head{padding:14px 16px;position:sticky;top:0;background:var(--surface);z-index:1}
+  .modal-body{padding:0 16px 24px}
+  .modal-foot{
+    padding:10px 16px calc(10px + env(safe-area-inset-bottom));
+    position:sticky;bottom:0;
+    background:var(--surface);
+  }
+  .modal input[type="text"],.modal input[type="url"],.modal input[type="password"],.modal textarea{font-size:16px} /* prevent iOS zoom */
+}
+/* 移动端禁用卡片内药丸标签的点击，避免误触 */
+@media(max-width:768px){
+  .card .card-tags .card-tag,
+  .group-card .card-tags .card-tag{
+    pointer-events:none;cursor:default;
+  }
+  /* Tap highlight suppression for interactive elements */
+  .card,.group-card,.rail-item,.btn,.sp-seg-btn,.sp-action,.sp-toggle-row{
+    -webkit-tap-highlight-color:transparent;
+  }
+}
+@media(max-width:480px){
+  .panel-header{padding:0 10px;height:auto;gap:6px 8px}
+  .panel-content{padding:8px 10px 80px}
+  .filter-row{height:auto;min-height:auto;max-height:none;padding:4px 10px;gap:4px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:0.01ms!important;transition-duration:0.01ms!important}
+}
+
+@media(max-width:768px){
+  .focus-richtext-toolbar{gap:3px}
+  .rt-btn{min-width:26px;height:26px;font-size:0.72rem;padding:3px 4px}
+  .ft-format-group,.ft-format-group+.ft-sep{display:none!important}
+  .ft-section-actions{flex:1 1 0!important;min-width:0!important}
+  .ft-undo-end{flex-shrink:0}
+  /* Batch bottom: tighter padding on mobile */
+  .batch-bottom-inner{padding:10px 14px}
+  .batch-btn{padding:11px 14px;font-size:0.82rem}
+}
+

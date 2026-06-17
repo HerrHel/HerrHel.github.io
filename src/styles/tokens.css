@@ -1,0 +1,134 @@
+/* ==================== DESIGN TOKENS ==================== */
+:root,[data-theme="light"]{
+  --bg:#F5EFEA;
+  --bg-alt:#EDE4DA;
+  --surface:#FDFBF9;
+  --surface-hover:#F7F2EC;
+  --surface-active:#EFE8DF;
+  --border:#E5DDD3;
+  --border-light:#EFE8DF;
+  --border-hover:#D5CBBE;
+  --text:#2C2824;
+  --text-secondary:#6E6860;
+  --text-muted:#A29A90;
+  --text-inverse:#FDFBF9;
+  --accent:#122E8A;
+  --accent-light:rgba(18,46,138,0.07);
+  --accent-glow:rgba(18,46,138,0.13);
+  --accent-grad:linear-gradient(135deg,#122E8A 0%,#1E40AF 100%);
+  --green:#0d7a6f;
+  --green-light:rgba(13,122,111,0.08);
+  --amber:#d97706;
+  --amber-light:rgba(180,83,9,0.08);
+  --rose:#be123c;
+  --rose-light:rgba(190,18,60,0.08);
+  --sky:#0369a1;
+  --sky-light:rgba(3,105,161,0.08);
+  --shadow-xs:0 1px 1px rgba(0,0,0,0.02);
+  --shadow-sm:0 1px 3px rgba(0,0,0,0.04),0 1px 2px rgba(0,0,0,0.02);
+  --shadow-md:0 4px 14px rgba(0,0,0,0.06),0 2px 4px rgba(0,0,0,0.02);
+  --shadow-lg:0 12px 36px rgba(0,0,0,0.07),0 4px 8px rgba(0,0,0,0.03);
+  --shadow-xl:0 24px 64px rgba(0,0,0,0.10);
+  --shadow-card:0 1px 3px rgba(0,0,0,0.04),0 0 0 1px rgba(0,0,0,0.02);
+  --shadow-card-hover:0 8px 28px rgba(0,0,0,0.08),0 2px 6px rgba(0,0,0,0.03);
+  --rail-bg:#F8F3ED;
+  --rail-border:#EBE3D9;
+  --overlay:rgba(0,0,0,0.25);
+  --card-badge-bg:#EDE5DB;
+  --card-badge-text:#6E6860;
+  --radius-sm:6px;
+  --radius-base:8px;
+  --radius-md:10px;
+  --radius-lg:14px;
+  --radius-xl:18px;
+  --ease-out:cubic-bezier(0.16,1,0.3,1);
+  --transition-fast:all 0.15s ease;
+  --transition-normal:all 0.2s var(--ease-out);
+  --ease-spring:cubic-bezier(0.34,1.56,0.64,1);
+}
+[data-theme="dark"]{
+  --bg:#1A1A1D;
+  --bg-alt:#202025;
+  --surface:#25252B;
+  --surface-hover:#2C2C33;
+  --surface-active:#32323A;
+  --border:#2F2F36;
+  --border-light:#27272E;
+  --border-hover:#3D3D46;
+  --text:#EEE9E2;
+  --text-secondary:#A8A39B;
+  --text-muted:#5E5A54;
+  --text-inverse:#1A1A1D;
+  --accent:#E6397C;
+  --accent-light:rgba(230,57,124,0.1);
+  --accent-glow:rgba(230,57,124,0.18);
+  --accent-grad:linear-gradient(135deg,#E6397C 0%,#F43F5E 100%);
+  --green:#14b8a6;
+  --green-light:rgba(20,184,166,0.1);
+  --amber:#f59e0b;
+  --amber-light:rgba(245,158,11,0.1);
+  --rose:#f43f5e;
+  --rose-light:rgba(244,63,94,0.1);
+  --sky:#38bdf8;
+  --sky-light:rgba(56,189,248,0.1);
+  --shadow-xs:0 1px 2px rgba(0,0,0,0.2);
+  --shadow-sm:0 1px 3px rgba(0,0,0,0.25),0 1px 2px rgba(0,0,0,0.15);
+  --shadow-md:0 4px 14px rgba(0,0,0,0.35),0 2px 4px rgba(0,0,0,0.15);
+  --shadow-lg:0 12px 36px rgba(0,0,0,0.45),0 4px 8px rgba(0,0,0,0.15);
+  --shadow-xl:0 24px 64px rgba(0,0,0,0.55);
+  --shadow-card:0 1px 3px rgba(0,0,0,0.15),0 0 0 1px rgba(255,255,255,0.03);
+  --shadow-card-hover:0 8px 28px rgba(0,0,0,0.3),0 2px 6px rgba(0,0,0,0.15);
+  --rail-bg:#16161B;
+  --rail-border:#27272E;
+  --overlay:rgba(0,0,0,0.6);
+  --card-badge-bg:rgba(255,255,255,0.05);
+  --card-badge-text:#A8A39B;
+}
+
+/* ---- Comfortable theme: light ---- */
+[data-theme-style="comfortable"][data-theme="light"],
+:root[data-theme-style="comfortable"]{
+  --bg:#F3F6EF;
+  --bg-alt:#E7ECE0;
+  --surface:#F9FBF6;
+  --surface-hover:#EDF2E6;
+  --surface-active:#E0E8D6;
+  --border:#D2DAC8;
+  --border-light:#DDE4D4;
+  --border-hover:#B8C4AC;
+  --text:#262E24;
+  --text-secondary:#4A5A46;
+  --text-muted:#8A9680;
+  --text-inverse:#F9FBF6;
+  --accent:#2C9678;
+  --accent-light:rgba(44,150,120,0.08);
+  --accent-glow:rgba(44,150,120,0.18);
+  --accent-grad:linear-gradient(135deg,#2C9678 0%,#3AAF8C 100%);
+  --rail-bg:#E9EEE2;
+  --rail-border:#D4DCC9;
+  --card-badge-bg:#E0E8D6;
+  --card-badge-text:#4A5A46;
+}
+/* ---- Comfortable theme: dark ---- */
+[data-theme-style="comfortable"][data-theme="dark"]{
+  --bg:#2B313F;
+  --bg-alt:#333A4A;
+  --surface:#363D50;
+  --surface-hover:#3E4658;
+  --surface-active:#464F62;
+  --border:#444C5E;
+  --border-light:#3A4152;
+  --border-hover:#525B70;
+  --text:#E2E7BF;
+  --text-secondary:#A8AD8A;
+  --text-muted:#6E7358;
+  --text-inverse:#2B313F;
+  --accent:#E2E7BF;
+  --accent-light:rgba(226,231,191,0.1);
+  --accent-glow:rgba(226,231,191,0.18);
+  --accent-grad:linear-gradient(135deg,#E2E7BF 0%,#C8CE9A 100%);
+  --rail-bg:#252B38;
+  --rail-border:#3A4152;
+  --card-badge-bg:rgba(226,231,191,0.08);
+  --card-badge-text:#A8AD8A;
+}
