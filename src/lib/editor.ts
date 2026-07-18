@@ -25,6 +25,8 @@ interface IEditorManager {
   toggleBold(gid: string): void
   setHeading(gid: string, level: number): void
   deleteNode(gid: string, attrName: string, attrValue: string): void
+  /** 在 silent 上下文中执行，抑制 GroupEditor onUpdate→syncToStore */
+  withSilent(fn: () => void): void
   insertAtCoords(gid: string, html: string, clientX: number, clientY: number): boolean
   insertText(gid: string, text: string): boolean
   /** 远端/程序化写回 notes：不触发 onUpdate→syncToStore 标脏回推 */
@@ -50,6 +52,11 @@ const editorManager: IEditorManager = {
     toRemove.reverse().forEach(function (p: number) {
       try { ed.chain().deleteRange({ from: p, to: p + 1 }).run() } catch (e: unknown) { console.warn('[Editor] deleteRange error:', e instanceof Error ? e.message : e) }
     })
+  },
+
+  withSilent: function (fn: () => void): void {
+    _silentContentDepth++
+    try { fn() } finally { _silentContentDepth-- }
   },
 
   insertAtCoords: function (gid: string, html: string, clientX: number, clientY: number): boolean {

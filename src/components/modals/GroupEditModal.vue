@@ -59,12 +59,9 @@ watch(() => store.modals.groupEdit, (open) => {
   if (open) nextTick(() => geNameRef.value?.focus())
 })
 
+// A2-003：列表读 geForm 草稿，取消不写 store
 const geBookmarkList = computed(() => {
-  const gId = geForm.id || store.editingGeId
-  if (!gId) return []
-  const sg = store.groupMap[gId]
-  if (!sg) return []
-  return sg.bookmarkIds
+  return geForm.bookmarkIds
     .map(id => store.bookmarkMap[id])
     .filter(Boolean)
 })
@@ -75,21 +72,17 @@ function domainName(url: string) { return domain(url || '') }
 function onRemoveBm(bmId: string) {
   const gId = geForm.id || store.editingGeId
   if (!gId) return
-  const sg = store.groupMap[gId]
-  if (!sg) return
-  const idx = sg.bookmarkIds.indexOf(bmId)
-  if (idx >= 0) {
-    const newIds = sg.bookmarkIds.filter((_, i) => i !== idx)
-    store.updateGroup(gId, { bookmarkIds: newIds })
-  }
-  EditorManager.deleteNode(gId, 'data-bm-id', bmId)
-  store.save()
+  geForm.bookmarkIds = geForm.bookmarkIds.filter(id => id !== bmId)
+  // A2-003：silent 删除节点，避免 onUpdate→syncToStore 提前写 store
+  EditorManager.withSilent(() => {
+    EditorManager.deleteNode(gId, 'data-bm-id', bmId)
+  })
 }
 
 function onMaskClick() { onClose() }
 function onClose() {
   // L8：焦点恢复已并入 closeGroupEdit，避免双重 focus
-  closeGroupEdit()
+  closeGroupEdit({ discard: true })
 }
 
 function onPreviewGeIconUrl() { previewGeIconUrl() }
