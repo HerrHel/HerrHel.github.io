@@ -176,10 +176,11 @@
   .acct-show-pw{padding:4px}
   .sp-toggle-row{padding:13px 10px}
   .sp-switch::before{content:'';position:absolute;inset:-13px -6px;z-index:1}
-  /* 移动端禁用卡片内药丸标签的点击，避免误触 */
+  /* B1-003：恢复卡片标签可点，与桌面 filterByTagName 一致；用更大 padding 降低误触 */
   .card .card-tags .card-tag,
   .group-card .card-tags .card-tag{
-    pointer-events:none;cursor:default;
+    pointer-events:auto;cursor:pointer;
+    padding:6px 10px;
   }
   /* Tap highlight suppression for interactive elements */
   .card,.group-card,.rail-item,.btn,.sp-seg-btn,.sp-action,.sp-toggle-row{

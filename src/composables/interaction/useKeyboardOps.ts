@@ -15,6 +15,9 @@ import { useToastStore } from '../../stores/toast.js'
 import { useContextMenuStore } from '../../stores/contextMenu.js'
 import { useAttrDropdownStore } from '../../stores/attrDropdown.js'
 import { useBatchMoveStore, useMfbStore } from '../../stores/overlay.js'
+import { useActionSheetStore } from '../../stores/actionSheet.js'
+import { useAuthStore } from '../../stores/auth.js'
+import { useE2EStore } from '../../stores/e2e.js'
 
 interface NavState {
   curCat: string
@@ -33,6 +36,8 @@ interface NavState {
   shortcutHelp: boolean
   // E3-001：版本历史与 settings/trash 同语义
   history: boolean
+  // A4-007：反馈弹窗
+  feedback: boolean
 }
 
 export function captureNavState(): NavState {
@@ -51,6 +56,7 @@ export function captureNavState(): NavState {
     deadLinks: ui.overlays?.deadLinks || false,
     shortcutHelp: ui.panels?.shortcutHelp || false,
     history: ui.panels?.history || false,
+    feedback: ui.overlays?.feedback || false,
   }
 }
 
@@ -81,6 +87,8 @@ export function restoreNavState(prev: NavState) {
   if (prev.shortcutHelp !== true && ui.panels.shortcutHelp) { ui.panels.shortcutHelp = false; return }
   // E3-001：HistoryPanel 后退关闭
   if (prev.history !== true && ui.panels.history) { ui.panels.history = false; return }
+  // A4-007：反馈弹窗后退关闭
+  if (prev.feedback !== true && ui.overlays.feedback) { ui.overlays.feedback = false; return }
   if (prev.curCat !== ui.curCat) { ui.curCat = prev.curCat; ui.focusedGroupId = null; return }
 }
 
@@ -132,6 +140,25 @@ export function _onGlobalKeydown(e: KeyboardEvent) {
     }
   }
   if (e.key === 'Escape') {
+    // A3-004：ActionSheet 优先关
+    const as = useActionSheetStore()
+    if (as.visible) { as.hide(); return }
+    // A2-006：Auth / E2E / SetupGuide
+    const auth = useAuthStore()
+    if (auth.authModalOpen) { auth.authModalOpen = false; return }
+    if (ui.modals.e2eUnlock) {
+      ui.modals.e2eUnlock = false
+      // A2-006：与 App.onE2EClose 一致 drain pending，避免 await 永挂
+      try {
+        const pending = useE2EStore().pendingUnlock.splice(0)
+        for (const resolve of pending) { try { resolve(false) } catch { /* ignore */ } }
+      } catch { /* store 未就绪 */ }
+      return
+    }
+    if (ui.modals.e2eSetup) { ui.modals.e2eSetup = false; return }
+    if (ui.modals.setupGuide) { ui.modals.setupGuide = false; return }
+    // A4-007：反馈弹窗
+    if (ui.overlays.feedback) { ui.overlays.feedback = false; return }
     if (ui.batchMode) { toggleBatchMode(); return }
     closeBmModal(); closeCatModal(); closeAttrModal(); closeGroupEdit()
     useContextMenuStore().hide(); hideSettingsMenu(); closeAddBmPopover(); hideAddDropdown()

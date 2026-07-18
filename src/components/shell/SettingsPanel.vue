@@ -176,7 +176,7 @@
   <!-- 反馈 / 建议 弹窗：邮箱地址 + 打开邮箱客户端 / 复制邮箱 双按钮 -->
   <Teleport to="body">
     <Transition name="modal">
-      <div v-if="feedbackOpen" class="modal-mask open" role="dialog" aria-modal="true" aria-label="反馈 / 建议" @click.self="feedbackOpen = false">
+      <div v-if="uiStore.overlays.feedback" class="modal-mask open" role="dialog" aria-modal="true" aria-label="反馈 / 建议" @click.self="uiStore.overlays.feedback = false">
         <div class="modal modal-sm">
           <div class="modal-body modal-body-center">
             <div class="confirm-msg">通过邮箱向我们反馈或建议</div>
@@ -344,13 +344,12 @@ function onToggleAutoDeadCheck() {
   else dl.startAutoCheck()
 }
 
-// ── 反馈 ──
+// ── 反馈（A4-007：状态进 overlays.feedback，支持 Esc / popstate）──
 const FEEDBACK_EMAIL = '2629490959@qq.com'
-const feedbackOpen = ref(false)
 
 function onFeedback() {
   pushNavState()
-  feedbackOpen.value = true
+  uiStore.overlays.feedback = true
   uiStore.panels.settings = false
 }
 
@@ -362,11 +361,11 @@ async function copyFeedbackEmail() {
     // clipboard API 不可用（旧浏览器/非安全上下文）：提示手动选中复制
     toast('复制失败，请手动选中邮箱地址复制', false)
   }
-  feedbackOpen.value = false
+  uiStore.overlays.feedback = false
 }
 
 function openFeedbackMail() {
   window.open('mailto:' + FEEDBACK_EMAIL + '?subject=' + encodeURIComponent('LinkVault 反馈 / 建议'), '_blank')
-  feedbackOpen.value = false
+  uiStore.overlays.feedback = false
 }
 </script>

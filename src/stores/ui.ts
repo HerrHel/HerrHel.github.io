@@ -43,6 +43,8 @@ export interface OverlayState {
   addDropdown: boolean   // addDropdownOpen
   addPopover: boolean    // addBmPopoverOpen
   deadLinks: boolean     // deadLinksPopoverOpen
+  /** A4-007：反馈弹窗纳入 overlays，支持 Esc / popstate */
+  feedback: boolean
 }
 
 export interface UIState {
@@ -127,6 +129,7 @@ export const useUIStore = defineStore('ui', {
       addDropdown: false,
       addPopover: false,
       deadLinks: false,
+      feedback: false,
     },
     addToGid: null,
     _addPopoverTrigger: null,
