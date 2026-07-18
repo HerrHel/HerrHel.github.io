@@ -338,15 +338,55 @@
   }
 
   // ── 当前标签页 ──
+  // F1-007：无 tabs 权限时 onActivated 常拿不到 url；UI 降级提示，需用户手势刷新
+  const tabUrlHint = $('#tabUrlHint')
+  const currentPageEl = $('#currentPage')
+
+  function setTabUrlHint(show) {
+    if (!tabUrlHint) return
+    if (show) tabUrlHint.classList.remove('hidden')
+    else tabUrlHint.classList.add('hidden')
+  }
+
   function loadCurrentTab() {
     chrome.runtime.sendMessage({ type: 'GET_CURRENT_TAB' }, function (tab) {
-      if (!tab) return
+      if (chrome.runtime.lastError) {
+        currentTab = null
+        pageTitle.textContent = '无法读取当前页'
+        pageUrl.textContent = '点击此处或 ↻ 刷新'
+        setTabUrlHint(true)
+        hideBookmarkDetail()
+        return
+      }
+      if (!tab) {
+        currentTab = null
+        pageTitle.textContent = '无活动标签'
+        pageUrl.textContent = ''
+        setTabUrlHint(true)
+        hideBookmarkDetail()
+        return
+      }
       currentTab = tab
-      pageTitle.textContent = tab.title || '无标题'
-      pageUrl.textContent = domain(tab.url)
-      pageIcon.src = tab.favIconUrl || ''
-      pageIcon.onerror = function () { pageIcon.style.display = 'none' }
-      checkCurrentPageMatch(tab.url)
+      const hasUrl = !!(tab.url && String(tab.url).trim())
+      pageTitle.textContent = tab.title || (hasUrl ? '无标题' : '当前页 URL 不可用')
+      pageUrl.textContent = hasUrl ? domain(tab.url) : '点击此处或 ↻ 刷新后保存'
+      if (tab.favIconUrl) {
+        pageIcon.style.display = ''
+        pageIcon.src = tab.favIconUrl
+        pageIcon.onerror = function () { pageIcon.style.display = 'none' }
+      } else {
+        pageIcon.style.display = 'none'
+      }
+      setTabUrlHint(!hasUrl)
+      if (hasUrl) checkCurrentPageMatch(tab.url)
+      else hideBookmarkDetail()
+    })
+  }
+
+  // 用户手势刷新：点击当前页卡片重新触发 activeTab 读取
+  if (currentPageEl) {
+    currentPageEl.addEventListener('click', function () {
+      loadCurrentTab()
     })
   }
 
@@ -520,7 +560,12 @@
     })
   })
 
-  $('#btnRefresh').addEventListener('click', function () { loadBookmarks(); toast('已刷新') })
+  // F1-007：刷新同时用用户手势重读当前标签 URL
+  $('#btnRefresh').addEventListener('click', function () {
+    loadCurrentTab()
+    loadBookmarks()
+    toast('已刷新')
+  })
 
   // ── 登录 ──
   $('#btnShowLogin').addEventListener('click', function () {
