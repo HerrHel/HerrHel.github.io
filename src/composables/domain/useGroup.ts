@@ -58,7 +58,9 @@ export function syncGroupBookmarks(gid: string) {
     ed.state.doc.descendants(function (node) {
       if (node.type.name === 'inlineCard') {
         const bmid = node.attrs['data-bm-id'];
-        if (bmid && !seen[bmid]) { seen[bmid] = true; ids.push(bmid); }
+        // A5-005：与 GroupEditor.syncToStore 一致，过滤软删/不存在的 id
+        const bm = bmid ? ds.bookmarkMap[bmid] : null;
+        if (bm && !bm.deletedAt && !seen[bmid]) { seen[bmid] = true; ids.push(bmid); }
       }
     });
     ds.updateGroup(gid, { bookmarkIds: ids });
@@ -70,7 +72,10 @@ export function syncGroupBookmarks(gid: string) {
     const seen2: Record<string, boolean> = {};
     cards.forEach(function (c) {
       const bmid = c.getAttribute('data-bm-id');
-      if (bmid && bmid.indexOf('ref:') !== 0 && !seen2[bmid]) { seen2[bmid] = true; ids2.push(bmid); }
+      if (bmid && bmid.indexOf('ref:') !== 0 && !seen2[bmid]) {
+        const bm = ds.bookmarkMap[bmid];
+        if (bm && !bm.deletedAt) { seen2[bmid] = true; ids2.push(bmid); }
+      }
     });
     ds.updateGroup(gid, { bookmarkIds: ids2 });
   }

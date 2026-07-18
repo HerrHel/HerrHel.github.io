@@ -28,6 +28,11 @@
 /* ---- 内联卡片（书签/组引用）---- */
 .group-tiptap .group-inline-card .gic-remove{display:none}
 .group-tiptap .group-inline-card:hover{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent-glow),var(--shadow-sm);transform:translateY(-1px)}
+/* A5-003/004：软删占位仍保留 data-bm-id，灰显且不可点 */
+.group-tiptap .group-inline-card.is-deleted,
+.group-body .group-inline-card.is-deleted{
+  opacity:0.55;pointer-events:none;filter:grayscale(0.4);cursor:default
+}
 .group-tiptap .ProseMirror-selectednode{outline:2px solid var(--accent);border-radius:var(--radius-sm)}
 
 /* ---- 任务列表 ---- */
