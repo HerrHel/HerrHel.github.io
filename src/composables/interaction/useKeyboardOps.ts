@@ -112,8 +112,11 @@ export function _onGlobalKeydown(e: KeyboardEvent) {
     else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
   }
   if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 'z' || e.key.toLowerCase() === 'y')) {
-    const ae = document.activeElement
+    const ae = document.activeElement as HTMLElement | null
     if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.tagName === 'SELECT')) return
+    // E3-005：contentEditable 但不在 .group-body 内（如组名行内编辑）交给浏览器原生撤销；
+    // TipTap 组 notes 在 .group-body 内，继续走 performUndo 自定义栈。
+    if (ae?.isContentEditable && !ae.closest?.('.group-body')) return
     let undoGid: string | undefined
     const gb = ae && ae.closest ? ae.closest('.group-body') : null
     if (gb) undoGid = gb.closest('.group-card')?.getAttribute('data-group-id') || undefined

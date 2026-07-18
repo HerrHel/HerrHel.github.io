@@ -107,6 +107,8 @@ const FUSE_OPTIONS: IFuseOptions = {
   threshold: 0.2,
   distance: 200,
   includeScore: true,
+  // D1-001：无 includeMatches 时 Fuse 不返回 matches，搜索建议高亮永久为空
+  includeMatches: true,
   minMatchCharLength: 1,
   ignoreLocation: true,
   findAllMatches: true,
