@@ -4,7 +4,8 @@
     <div class="error-boundary-icon">⚠</div>
     <h3>出错了</h3>
     <p>{{ errorMsg }}</p>
-    <pre style="font-size:11px;max-height:200px;overflow:auto;text-align:left">{{ errStack }}</pre>
+    <!-- A6-002：生产不渲染 stack；仅 dev 或 ?debug=1 可见 -->
+    <pre v-if="showStack && errStack" style="font-size:11px;max-height:200px;overflow:auto;text-align:left">{{ errStack }}</pre>
     <button class="btn btn-secondary" @click="reload">重试</button>
   </div>
 </template>
@@ -19,11 +20,14 @@ const props = defineProps<{ name?: string }>()
 const errored = ref(false)
 const errorMsg = ref('')
 const errStack = ref('')
+// A6-002：stack 仅诊断，不进生产 DOM
+const showStack = import.meta.env.DEV ||
+  (typeof location !== 'undefined' && /[?&]debug=1\b/.test(location.search))
 
 onErrorCaptured((err: Error) => {
   errored.value = true
   errorMsg.value = err.message || '未知错误'
-  errStack.value = (err.stack || '').split('\n').slice(0, 6).join('\n')
+  errStack.value = showStack ? (err.stack || '').split('\n').slice(0, 6).join('\n') : ''
   console.error('[ErrorBoundary]', props.name || 'boundary', err)
   // A6-001：return false 会阻断 app.config.errorHandler；此处主动上报，消除监控黑洞
   try {

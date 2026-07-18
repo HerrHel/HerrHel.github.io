@@ -91,9 +91,11 @@ const GroupRefCard = Node.create({
       return span
     }
 
-    if (g.icon) {
+    // A5-006：icon 经 favicon/safeIconUrl 白名单
+    const safeIcon = g.icon ? favicon('', g.icon) : ''
+    if (safeIcon) {
       const img = document.createElement('img')
-      img.src = g.icon
+      img.src = safeIcon
       img.alt = ''
       span.appendChild(img)
     } else {

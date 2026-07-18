@@ -33,7 +33,13 @@
         return
       }
       if (target.classList && target.classList.contains('bookmark-item')) {
-        chrome.tabs.create({ url: target.dataset.url })
+        // F1-005：仅允许 http(s)，拒绝 javascript:/data: 等
+        var openUrl = target.dataset.url
+        if (!isSafeHttpUrl(openUrl)) {
+          toast('无法打开：链接协议不安全', 2000)
+          return
+        }
+        chrome.tabs.create({ url: openUrl })
         return
       }
       target = target.parentElement
@@ -84,17 +90,41 @@
   let _mpClearTimer = null
 
   /** M6：主密码用后定时清空，缩短明文常驻 sidepanel 内存窗口 */
+  /** F1-002：主密码 TTL 到期时同步掩码 DOM 明文密码 */
+  function maskRevealedPassword() {
+    passwordRevealed = false
+    if (bdPasswordText) {
+      bdPasswordText.textContent = '••••••••'
+      bdPasswordText.className = 'bd-pw-text'
+    }
+    if (bdPwShow) bdPwShow.textContent = '显示'
+  }
+
   function scheduleClearMasterPassword() {
     if (_mpClearTimer) clearTimeout(_mpClearTimer)
     _mpClearTimer = setTimeout(function () {
       sessionMasterPassword = ''
       _mpClearTimer = null
+      // F1-002：TTL 到同时清 DOM 明文
+      maskRevealedPassword()
     }, MASTER_PASSWORD_TTL_MS)
   }
 
   function clearMasterPasswordNow() {
     if (_mpClearTimer) { clearTimeout(_mpClearTimer); _mpClearTimer = null }
     sessionMasterPassword = ''
+    maskRevealedPassword()
+  }
+
+  /** F1-005：与 background openPwaWithUrl 对齐的 http(s) scheme 白名单 */
+  function isSafeHttpUrl(url) {
+    if (!url || typeof url !== 'string') return false
+    try {
+      var u = new URL(url.trim())
+      return u.protocol === 'http:' || u.protocol === 'https:'
+    } catch (_) {
+      return false
+    }
   }
 
   // ── Toast ──
@@ -382,23 +412,33 @@
         }
         if (window.LinkVaultCrypto) plaintext = await window.LinkVaultCrypto.autoDecryptPassword(stored, sessionMasterPassword)
         else { toast('解密库未加载'); return }
-        // M6：解密成功后启动 TTL，到期清空 sessionMasterPassword
-        scheduleClearMasterPassword()
       } else {
         if (window.LinkVaultCrypto) plaintext = await window.LinkVaultCrypto.autoDecryptPassword(stored, '')
         else plaintext = typeof stored === 'string' ? stored : ''
       }
       bdPasswordText.textContent = plaintext; bdPasswordText.className = 'bd-pw-text revealed'
       bdPwShow.textContent = '隐藏'; passwordRevealed = true
+      // F1-002/M6：成功后启动 TTL，到期清主密码并掩码 DOM 明文
+      scheduleClearMasterPassword()
     } catch (e) {
-      toast('解密失败: ' + e.message)
-      if (e.message && e.message.indexOf('主密码') !== -1) clearMasterPasswordNow()
+      toast('解密失败: ' + (e && e.message ? e.message : '未知错误'))
+      // F1-003：任意解密失败一律清主密码，勿依赖中文错误子串
+      clearMasterPasswordNow()
     }
   })
 
   bdPwCopy.addEventListener('click', async function () {
     if (!currentMatchedBookmark || !currentMatchedBookmark.password) return
-    if (!passwordRevealed) { bdPwShow.click(); await new Promise(function (r) { setTimeout(r, 100) }); if (!passwordRevealed) return }
+    // F1-006：等待解密完成（prompt+PBKDF2 可能远超 100ms），轮询 passwordRevealed
+    if (!passwordRevealed) {
+      bdPwShow.click()
+      var waited = 0
+      while (!passwordRevealed && waited < 15000) {
+        await new Promise(function (r) { setTimeout(r, 100) })
+        waited += 100
+      }
+      if (!passwordRevealed) return
+    }
     var text = bdPasswordText.textContent
     if (text === '••••••••') return
     navigator.clipboard.writeText(text).then(function () { toast('密码已复制', 1500) }).catch(function () { toast('复制失败', 1500) })
@@ -458,11 +498,25 @@
           || tab.url.startsWith('file:') || tab.url.startsWith('javascript:') || tab.url.startsWith('data:')
           || tab.url.startsWith('blob:') || tab.url.startsWith('view-source:')) { return toast('浏览器内部页面无法保存') }
 
-      // 委托 background 打开 PWA 保存（走 PWA 的 sync queue）
-      chrome.runtime.sendMessage({ type: 'SAVE_TO_VAULT', url: tab.url, title: tab.title || tab.url })
-      flashSaveButton(true)
-      setStatus('ok', '已连接')
-      toast('已发送到 LinkVault 保存')
+      // F1-008：等 background 回执再 flash 成功，避免未送达仍显示已保存
+      chrome.runtime.sendMessage(
+        { type: 'SAVE_TO_VAULT', url: tab.url, title: tab.title || tab.url },
+        function (resp) {
+          if (chrome.runtime.lastError) {
+            flashSaveButton(false)
+            toast('保存失败：' + (chrome.runtime.lastError.message || '扩展通信错误'))
+            return
+          }
+          if (resp && resp.ok) {
+            flashSaveButton(true)
+            setStatus('ok', '已连接')
+            toast('已发送到 LinkVault 保存')
+          } else {
+            flashSaveButton(false)
+            toast('保存失败，请重试')
+          }
+        },
+      )
     })
   })
 
@@ -500,7 +554,16 @@
     loginBanner.classList.add('hidden'); otpSection.classList.add('hidden')
     emailInput.value = ''; otpInput.value = ''
   })
-  $('#btnLogout').addEventListener('click', async function () { await sb.auth.signOut() })
+  // F1-004：退出时清主密码/明文/内存书签，避免跨会话残留
+  $('#btnLogout').addEventListener('click', async function () {
+    clearMasterPasswordNow()
+    passwordRevealed = false
+    allBookmarks = []
+    currentMatchedBookmark = null
+    if (bookmarkList) bookmarkList.innerHTML = ''
+    hideBookmarkDetail()
+    await sb.auth.signOut()
+  })
 
   // ── 登录门上的登录按钮 ──
   $('#btnLoginGate').addEventListener('click', function () {
