@@ -23,6 +23,22 @@
   const pageUrl = $('#pageUrl')
   const pageIcon = $('#pageIcon')
   const bookmarkList = $('#bookmarkList')
+  // F1-001：click 委托只注册一次，禁止 renderBookmarks 每次重绘叠加监听
+  bookmarkList.addEventListener('click', function (e) {
+    var target = e.target
+    while (target && target !== bookmarkList) {
+      if (target.dataset && target.dataset.action === 'delete') {
+        e.stopPropagation()
+        deleteBookmark(target.dataset.id, target.dataset.title)
+        return
+      }
+      if (target.classList && target.classList.contains('bookmark-item')) {
+        chrome.tabs.create({ url: target.dataset.url })
+        return
+      }
+      target = target.parentElement
+    }
+  })
   const statusDot = $('#statusDot')
   const statusText = $('#statusText')
   const bookmarkCount = $('#bookmarkCount')
@@ -226,21 +242,7 @@
       bookmarkList.appendChild(f2)
     }
 
-    bookmarkList.addEventListener('click', function (e) {
-      var target = e.target
-      while (target && target !== bookmarkList) {
-        if (target.dataset.action === 'delete') {
-          e.stopPropagation()
-          deleteBookmark(target.dataset.id, target.dataset.title)
-          return
-        }
-        if (target.classList.contains('bookmark-item')) {
-          chrome.tabs.create({ url: target.dataset.url })
-          return
-        }
-        target = target.parentElement
-      }
-    }, { once: false })
+    // F1-001：click 委托已在模块初始化注册一次，禁止此处每次重绘叠加
   }
 
   // ── 搜索 ──
