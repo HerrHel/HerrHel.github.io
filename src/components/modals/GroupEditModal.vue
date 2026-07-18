@@ -17,7 +17,7 @@
         <div class="form-group">
           <label class="form-label">属性标记</label>
           <div class="check-group">
-            <label v-for="a in store.customAttributes" :key="a.id" class="check-chip" :class="{ 'is-system-attr': a.id === ATTR_IS_GROUP }">
+            <label v-for="a in selectableAttrs" :key="a.id" class="check-chip" :class="{ 'is-system-attr': a.id === ATTR_IS_GROUP }">
               <input type="checkbox" :checked="a.id === ATTR_IS_GROUP || !!geForm.attrs[a.id]" :disabled="a.id === ATTR_IS_GROUP" @change="geForm.attrs[a.id] = ($event.target as HTMLInputElement).checked">
               {{ a.name }}
             </label>
@@ -54,6 +54,10 @@ const store = useAppStore()
 const geNameRef = ref<HTMLInputElement | null>(null)
 
 const categoryOptions = computed(() => store.selectableCategories)
+// A2-007：不展示软删属性
+const selectableAttrs = computed(() =>
+  store.selectableAttributes || store.customAttributes.filter(a => !a.deletedAt)
+)
 
 watch(() => store.modals.groupEdit, (open) => {
   if (open) nextTick(() => geNameRef.value?.focus())

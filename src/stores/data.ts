@@ -199,6 +199,10 @@ export const useDataStore = defineStore('data', {
     selectableCategories(state): Category[] {
       return state.categories.filter(c => c.id !== CAT_ALL && !c.deletedAt)
     },
+    /** A2-007：可勾选/管理的属性（排除软删）；查重同名重建时亦用此列表 */
+    selectableAttributes(state): CustomAttribute[] {
+      return state.customAttributes.filter(a => !a.deletedAt)
+    },
   },
 
   actions: {

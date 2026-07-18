@@ -71,7 +71,7 @@
         <div class="form-group">
           <label class="form-label">属性标记</label>
           <div class="check-group">
-            <label v-for="attr in store.customAttributes.filter(a => a.id !== ATTR_IS_GROUP)" :key="attr.id" class="check-chip" :class="{ 'ai-highlight': bmForm.aiSuggestAttrIds.includes(attr.id) }">
+            <label v-for="attr in selectableAttrs" :key="attr.id" class="check-chip" :class="{ 'ai-highlight': bmForm.aiSuggestAttrIds.includes(attr.id) }">
               <input type="checkbox" :checked="bmForm.attributes[attr.id]"
                      @change="toggleAttr(attr.id, $event)">
               {{ attr.name }}
@@ -81,7 +81,7 @@
       </div>
       <div class="modal-foot">
         <button class="btn btn-secondary" @click="onClose">取消</button>
-        <button class="btn btn-primary" @click="onSave">{{ bmForm.isEdit ? '更新' : '保存' }}</button>
+        <button class="btn btn-primary" :disabled="saving" @click="onSave">{{ bmForm.isEdit ? '更新' : '保存' }}</button>
       </div>
     </div>
   </div>
@@ -90,7 +90,7 @@
 <script setup lang="ts">
 import { computed, watch, nextTick, ref } from 'vue'
 import { useAppStore } from '../../stores/app.js'
-import { bmForm, closeBmModal, saveBm, previewIconUrl, clearIcon, autoFetchFromUrl, applyAiCategory, applyAiAttributes, dismissAiSuggestions } from '../../composables/domain/useBookmark.js'
+import { bmForm, closeBmModal, saveBm, isBmSaving, previewIconUrl, clearIcon, autoFetchFromUrl, applyAiCategory, applyAiAttributes, dismissAiSuggestions } from '../../composables/domain/useBookmark.js'
 import { I } from '../../config/icons.js'
 import { ATTR_IS_GROUP } from '../../config/constants.js'
 import { useE2E } from '../../composables/domain/useE2E.js'
@@ -100,8 +100,15 @@ const store = useAppStore()
 const titleRef = ref<HTMLInputElement | null>(null)
 const e2e = useE2E()
 const e2eEnabled = computed(() => e2e.isE2EEnabled.value && e2e.isUnlocked.value)
+// A2-004：按钮禁用；isBmSaving 非响应式，用本地 saving 包一层
+const saving = ref(false)
 
 const categoryOptions = computed(() => store.selectableCategories)
+// A2-007：不展示软删属性
+const selectableAttrs = computed(() =>
+  (store.selectableAttributes || store.customAttributes.filter(a => !a.deletedAt))
+    .filter(a => a.id !== ATTR_IS_GROUP)
+)
 const parentOptions = computed(() =>
   store.bookmarks.filter(b => !b.parentId && b.id !== bmForm.id)
 )
@@ -128,7 +135,11 @@ function toggleAttr(attrId: string, event: Event) {
 }
 
 function onClose() { closeBmModal() }
-function onSave() { saveBm() }
+async function onSave() {
+  if (saving.value || isBmSaving()) return
+  saving.value = true
+  try { await saveBm() } finally { saving.value = false }
+}
 function onPreviewIconUrl() { previewIconUrl() }
 function onClearIcon() { clearIcon() }
 function onUrlInput() { autoFetchFromUrl() }

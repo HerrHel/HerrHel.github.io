@@ -57,6 +57,7 @@ export const useAppStore = defineStore('app', () => {
     bookmarkMap, groupMap, childrenMap,
     filteredBookmarks, filteredGroups, cardCounts,
     selectableCategories: computed(() => ds().selectableCategories),
+    selectableAttributes: computed(() => ds().selectableAttributes),
 
     // ── UI 状态（可读写，委托 uiStore）──
     curCat: uiProp('curCat'),
