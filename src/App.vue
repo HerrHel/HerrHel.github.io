@@ -72,7 +72,7 @@ import { isMobile } from './utils.js'
 import { toggleDetailPanel, toggleRail, closeRail } from './composables/ui/useUI.js'
 import { useApp } from './composables/useApp.js'
 import { useAppHandlers } from './composables/useAppHandlers.js'
-import { useAppLifecycle, onShareRoute } from './composables/useAppLifecycle.js'
+import { useAppLifecycle, onShareRoute, whenDataReady } from './composables/useAppLifecycle.js'
 import { useE2E } from './composables/domain/useE2E.js'
 import { useCloudSync } from './composables/domain/useCloudSync.js'
 import { useE2EStore } from './stores/e2e.js'
@@ -134,8 +134,8 @@ onMounted(async () => {
   //   - 扩展快捷键/右键菜单: ?ext_save=1&ext_save_url=...&ext_save_title=...
   //   - Web Share Target: ?title=...&text=...&url=...
   // 静默保存 + toast 撤销（否决纯静默方案，保留可逆性）
-  // H8：先读参再立刻 replaceState 清 query，避免 800ms 窗口内错误上报泄漏书签内容；
-  // 保存动作仍延后等初始化完成。
+  // H8：先读参再立刻 replaceState 清 query，避免错误上报泄漏书签内容。
+  // E1-001/E1-002：await whenDataReady（loadData+_syncMaps）后再 save，禁止固定 800ms 竞态。
   const params = new URLSearchParams(window.location.search)
   const extSaveUrl = params.get('ext_save_url')
   const shareUrl = params.get('url')
@@ -146,10 +146,9 @@ onMounted(async () => {
     const incomingText = params.get('ext_save_notes') || params.get('text') || ''
     const cleanUrl = window.location.origin + window.location.pathname
     window.history.replaceState(null, '', cleanUrl)
-    // 等应用初始化完成后再保存
-    setTimeout(() => {
+    whenDataReady().then(() => {
       saveFromExtension(incomingUrl, incomingTitle, incomingText)
-    }, 800)
+    })
   }
 })
 

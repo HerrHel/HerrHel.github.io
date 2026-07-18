@@ -12,6 +12,7 @@ import { suggestCategory, suggestAttributes } from '../../lib/ai-classify.js'
 import { safeDecodePassword, encrypt, decrypt } from '../../crypto.js'
 import { CAT_ALL, CAT_UNCATEGORIZED } from '../../config/constants.js'
 import type { Bookmark, EncryptedPassword } from '../../types.js'
+import { isDataHydrated } from '../../lib/dataReady.js'
 
 interface BmFormState {
   id: string
@@ -413,8 +414,15 @@ export async function deleteBookmarkWithUndo(id: string, skipConfirm?: boolean) 
 /**
  * 静默保存书签（扩展/分享目标传入），保存后显示带撤销按钮的 toast。
  * 不打开编辑弹窗，实现一键保存。
+ * 调用方须 await whenDataReady() 后再调用（E1-001/E1-002）；未 hydrate 时拒绝写入，
+ * 避免空 store 快照覆盖 IDB 或随后被 load 整表冲掉。
  */
 export function saveFromExtension(url: string, title?: string, notes?: string): boolean {
+  if (!isDataHydrated()) {
+    console.warn('[LinkVault] saveFromExtension 在 dataReady 前被调用，已拒绝')
+    toast('数据尚未就绪，请稍后重试', false)
+    return false
+  }
   const ds = useDataStore()
   const safeUrl = fixUrl(url)
   if (!safeUrl) {
