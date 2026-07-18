@@ -23,13 +23,13 @@
         <div class="form-row">
           <div class="form-group">
             <label class="form-label" for="bmUsername">账户</label>
-            <E2ELockOverlay :disabled="!e2eEnabled" hint="开启 E2E 后可存储账户">
+            <E2ELockOverlay :disabled="!e2eFieldsOpen" :hint="e2eHintAccount" @hint-click="onE2EHintClick">
               <input type="text" class="form-input" id="bmUsername" v-model="bmForm.username" placeholder="用户名">
             </E2ELockOverlay>
           </div>
           <div class="form-group">
             <label class="form-label" for="bmPassword">密码</label>
-            <E2ELockOverlay :disabled="!e2eEnabled" hint="开启 E2E 后可存储密码">
+            <E2ELockOverlay :disabled="!e2eFieldsOpen" :hint="e2eHintPassword" @hint-click="onE2EHintClick">
               <div class="pw-wrap">
                 <input :type="bmForm.showPassword ? 'text' : 'password'" class="form-input pw-input" id="bmPassword" v-model="bmForm.password" placeholder="密码">
                 <button class="pw-toggle" type="button" :title="bmForm.showPassword ? '隐藏密码' : '显示密码'" @click="bmForm.showPassword = !bmForm.showPassword" v-html="bmForm.showPassword ? I.eyeOff : I.eye"></button>
@@ -99,7 +99,25 @@ import E2ELockOverlay from '../ui/E2ELockOverlay.vue'
 const store = useAppStore()
 const titleRef = ref<HTMLInputElement | null>(null)
 const e2e = useE2E()
-const e2eEnabled = computed(() => e2e.isE2EEnabled.value && e2e.isUnlocked.value)
+// A6-004：仅「已启用且已解锁」才开放字段；hint 区分 setup / unlock
+const e2eFieldsOpen = computed(() => e2e.isE2EEnabled.value && e2e.isUnlocked.value)
+const e2eHintAccount = computed(() =>
+  e2e.isE2EEnabled.value && !e2e.isUnlocked.value
+    ? '点击解锁后可编辑账户'
+    : '开启 E2E 后可存储账户',
+)
+const e2eHintPassword = computed(() =>
+  e2e.isE2EEnabled.value && !e2e.isUnlocked.value
+    ? '点击解锁后可编辑密码'
+    : '开启 E2E 后可存储密码',
+)
+function onE2EHintClick() {
+  if (e2e.isE2EEnabled.value && !e2e.isUnlocked.value) {
+    store.modals.e2eUnlock = true
+  } else if (!e2e.isE2EEnabled.value) {
+    store.modals.e2eSetup = true
+  }
+}
 // A2-004：按钮禁用；isBmSaving 非响应式，用本地 saving 包一层
 const saving = ref(false)
 

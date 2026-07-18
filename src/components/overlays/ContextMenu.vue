@@ -23,6 +23,7 @@ import { openDetail, deleteCategory, deleteAttribute, openCatModal } from '../..
 import { editGroup, deleteGroup, removeBmFromGroup, createGroup } from '../../composables/domain/useGroup.js'
 import { shareGroup } from '../../composables/domain/useDataShare.js'
 import { toggleBatchMode } from '../../composables/domain/useBatch.js'
+import { pushNavState } from '../../composables/interaction/useKeyboardOps.js'
 
 const store = useAppStore()
 const ctx = useContextMenuStore()
@@ -100,7 +101,13 @@ function _dispatchAction(type: string, action: string, id: string) {
     if (action === ACTIONS.VISIT) visit(null, id)
     if (action === ACTIONS.EDIT) openBmModal(id)
     if (action === ACTIONS.DELETE) deleteBookmarkWithUndo(id)
-    if (action === ACTIONS.HISTORY) { store.historyItemId = id; store.historyItemType = 'bookmark'; store.panels.history = true }
+    if (action === ACTIONS.HISTORY) {
+      // E3-001：打开前 push，浏览器后退可关 HistoryPanel
+      pushNavState()
+      store.historyItemId = id
+      store.historyItemType = 'bookmark'
+      store.panels.history = true
+    }
     // A3-001：补齐移动到 / 多选分发（与 group 路径一致）
     if (action === ACTIONS.MOVE_TO_CAT) useActionSheetStore().showBmCategoryPicker(id)
     if (action === ACTIONS.MULTI_SELECT) {
@@ -134,7 +141,12 @@ function _dispatchAction(type: string, action: string, id: string) {
     if (action === ACTIONS.DELETE) deleteGroup(id)
     if (action === ACTIONS.MOVE_TO_CAT) useActionSheetStore().showGroupCategoryPicker(id)
     if (action === ACTIONS.SHARE_GROUP) shareGroup(id)
-    if (action === ACTIONS.HISTORY) { store.historyItemId = id; store.historyItemType = 'group'; store.panels.history = true }
+    if (action === ACTIONS.HISTORY) {
+      pushNavState()
+      store.historyItemId = id
+      store.historyItemType = 'group'
+      store.panels.history = true
+    }
   } else if (type === 'group-card') {
     if (action === ACTIONS.VISIT) openDetail(id)
     if (action === ACTIONS.EDIT) openBmModal(id)

@@ -139,24 +139,22 @@ export const useAppStore = defineStore('app', () => {
     loadFromStorage() { ds().loadFromStorage() },
     tryLoadFromIDB() { return ds().tryLoadFromIDB() },
 
-    save() {
+    save(): Promise<boolean> {
       const d = ds()
       const data = d._dataSnapshot()
       const fp = _fingerprint(data)
-      if (fp && fp === _lastSavedFingerprint) return
+      if (fp && fp === _lastSavedFingerprint) return Promise.resolve(true)
       // 运行时验证数据完整性，阻止损坏数据写入存储
       const parsed = AppDataSchema.safeParse(data)
       if (!parsed.success) {
         console.error('[store] 数据验证失败，跳过存储:', parsed.error.issues)
-        return
+        return Promise.resolve(false)
       }
       d._storageInfoDirty = true
       d._saveCount++
       // IDB 权威写入（含 localStorage 尽力缓存）
-      // persist.saveData 失败时返回 false（隐私模式/IDB配额满等），fire-and-forget 但 toast 首次警告。
-      // 旧实现不 await 不检查返回值 → 用户存的书签没落库却无任何提示，下次刷新发现丢了误以为 bug。
-      // 只弹一次避免刷屏：debouncedSave 300ms 防抖触发 save 频率不低。
-      persist.saveData(parsed.data).then(ok => {
+      // E1-003：返回 Promise 供 flush 可 await；toast 仍链式处理。
+      const p = persist.saveData(parsed.data).then(ok => {
         if (ok) {
           _lastSavedFingerprint = fp
           // H11：写入恢复成功即清旗标，让「恢复→再失败」能重新提示
@@ -172,8 +170,10 @@ export const useAppStore = defineStore('app', () => {
             toast('⚠️ 存储不可用（如隐私模式/配额满），刷新后数据可能丢失，请尽快导出备份', false)
           }
         }
+        return ok
       })
       if (d._saveCount % 10 === 0) useUndoStore().cleanStale()
+      return p
     },
 
     debouncedSave(delayMs = 300) {
@@ -185,13 +185,14 @@ export const useAppStore = defineStore('app', () => {
       }, delayMs)
     },
 
-    flushDebouncedSave() {
+    /** E1-003：取消防抖并 await 落盘 */
+    flushDebouncedSave(): Promise<boolean> {
       const d = ds()
       if (d._saveTimer) {
         clearTimeout(d._saveTimer)
         d._saveTimer = null
-        this.save()
       }
+      return this.save()
     },
 
     _dataSnapshot() { return ds()._dataSnapshot() },
@@ -212,7 +213,7 @@ export const useAppStore = defineStore('app', () => {
 // 委托至 appStore action，避免保存逻辑重复
 
 export function saveAppData() {
-  useAppStore().save()
+  return useAppStore().save()
 }
 
 export function debouncedSaveAppData() {
@@ -224,6 +225,7 @@ export function debouncedSaveAppDataNotes(delayMs = 1200) {
   useAppStore().debouncedSave(delayMs)
 }
 
-export function flushSaveAppData() {
-  useAppStore().flushDebouncedSave()
+/** E1-003：可 await 的 flush */
+export function flushSaveAppData(): Promise<boolean> {
+  return useAppStore().flushDebouncedSave()
 }

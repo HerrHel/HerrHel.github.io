@@ -8,7 +8,7 @@ import { useUIStore } from '../stores/ui.js'
 import { flushSaveAppData } from '../stores/app.js'
 import { useMentionStore } from '../stores/overlay.js'
 import { detectShareRoute } from './domain/useDataShare.js'
-import { loadData } from '../stores/persist.js'
+import { loadData, saveToLocalStorage as persistSaveToLocalStorage } from '../stores/persist.js'
 
 // A4: 分享路由回调，App.vue 注册以接收 share group ID
 let _onShareRoute: ((gid: string) => void) | null = null
@@ -87,15 +87,26 @@ export function useAppLifecycle() {
     })
     cleanups.push(() => syncWatch())
 
+    // E1-003：beforeunload 同步写 localStorage 兜底；visibility hidden 链式 await flush
     const flushAndSave = () => {
-      flushSaveAppData()
+      // 同步 localStorage 快照（关页时浏览器可完成同步写，难等 IDB）
+      try {
+        const snap = ds._dataSnapshot()
+        persistSaveToLocalStorage(snap)
+      } catch (_) { /* ignore */ }
+      void flushSaveAppData()
       flushIDB()
     }
     const onSaveUI = () => ui.saveUIState()
     const onClearSel = () => window.getSelection()?.removeAllRanges()
     const onVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
-        flushAndSave()
+        // 先同步 LS 兜底，再 await IDB flush（hidden 生命周期内尽量完成）
+        try {
+          const snap = ds._dataSnapshot()
+          persistSaveToLocalStorage(snap)
+        } catch (_) { /* ignore */ }
+        void flushSaveAppData()
         // A4-005：切后台/杀进程前落盘 UI 偏好
         ui.saveUIState()
       }

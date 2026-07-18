@@ -25,12 +25,14 @@ interface NavState {
   cat: boolean
   attr: boolean
   // 面板类叠加层：与 modal 一样支持「打开前 push、后退关」语义。
-  // 原实现不含这些 → 打开 settings/trash/deadLinks/shortcutHelp 时未 push，
+  // 原实现不含这些 → 打开 settings/trash/deadLinks/shortcutHelp/history 时未 push，
   // 用户后退无法关面板（只能点关闭按钮/Esc）。
   settings: boolean
   trash: boolean
   deadLinks: boolean
   shortcutHelp: boolean
+  // E3-001：版本历史与 settings/trash 同语义
+  history: boolean
 }
 
 export function captureNavState(): NavState {
@@ -48,6 +50,7 @@ export function captureNavState(): NavState {
     trash: ui.panels?.trash || false,
     deadLinks: ui.overlays?.deadLinks || false,
     shortcutHelp: ui.panels?.shortcutHelp || false,
+    history: ui.panels?.history || false,
   }
 }
 
@@ -76,6 +79,8 @@ export function restoreNavState(prev: NavState) {
   if (prev.trash !== true && ui.panels.trash) { ui.panels.trash = false; return }
   if (prev.deadLinks !== true && ui.overlays.deadLinks) { ui.overlays.deadLinks = false; return }
   if (prev.shortcutHelp !== true && ui.panels.shortcutHelp) { ui.panels.shortcutHelp = false; return }
+  // E3-001：HistoryPanel 后退关闭
+  if (prev.history !== true && ui.panels.history) { ui.panels.history = false; return }
   if (prev.curCat !== ui.curCat) { ui.curCat = prev.curCat; ui.focusedGroupId = null; return }
 }
 

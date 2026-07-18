@@ -72,6 +72,22 @@ describe('captureNavState / restoreNavState 含 settings/trash/deadLinks/shortcu
     expect(mockUI.panels.shortcutHelp).toBe(false)
   })
 
+  // E3-001 / E3-006：history 纳入 NavState，与 trash 同语义
+  it('关闭 history (E3-001)', () => {
+    mockUI.panels.history = true
+    const prev = captureNavState(); prev.history = false
+    restoreNavState(prev)
+    expect(mockUI.panels.history).toBe(false)
+  })
+
+  it('captureNavState 含 history 字段', () => {
+    mockUI.panels.history = true
+    const s = captureNavState()
+    expect(s.history).toBe(true)
+    mockUI.panels.history = false
+    expect(captureNavState().history).toBe(false)
+  })
+
   it('prev=open 表示本层即打开态，后退不关（应保持开，留给上层处理）', () => {
     mockUI.panels.trash = true
     const prev = captureNavState() // 此时 trash 已开 → prev.trash=true
