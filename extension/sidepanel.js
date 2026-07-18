@@ -330,10 +330,17 @@
   })
 
   // ── 删除（仅云端）──
+  // F1-009：删除前确认，避免列表/详情一键误删
   async function deleteBookmark(id, title) {
+    const label = (title && String(title).trim()) || '该书签'
+    if (!window.confirm('确定删除「' + label + '」？此操作将移入回收站。')) return
     const result = await sb.from('bookmarks').update({ deleted_at: new Date().toISOString() }).eq('id', id).eq('user_id', userId)
     if (result.error) { toast('删除失败: ' + result.error.message); return }
     toast('已删除', 2500)
+    if (currentMatchedBookmark && currentMatchedBookmark.id === id) {
+      currentMatchedBookmark = null
+      hideBookmarkDetail()
+    }
     loadBookmarks()
   }
 

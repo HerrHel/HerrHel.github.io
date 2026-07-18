@@ -124,7 +124,8 @@ function show() {
   if (!mobile.value && !isMobile()) return
   hide()
   isVisible.value = true
-  syncState()
+  // A5-007：移动端同样挂 selectionUpdate，避免格式钮 active 与选区脱节
+  _attachSync()
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', updateViewport)
     window.visualViewport.addEventListener('scroll', updateViewport)
@@ -138,6 +139,7 @@ function hide() {
   isVisible.value = false
   kbBottom.value = 0
   paletteOpen.value = false
+  _detachSync()
   if (_showTimer) { clearTimeout(_showTimer); _showTimer = null }
   if (window.visualViewport) {
     window.visualViewport.removeEventListener('resize', updateViewport)
@@ -162,9 +164,15 @@ function _detachSync() {
   }
 }
 
+// A5-007：桌面跟 gid；移动端由 show/hide 管 _attachSync，gid 变化时若 mfb 已开则重绑
 watch(gid, (v) => {
-  if (mobile.value) return
   paletteOpen.value = false
+  if (mobile.value) {
+    const mfb = useMfbStore()
+    if (mfb.open && v) _attachSync()
+    else if (!v) _detachSync()
+    return
+  }
   if (v) _attachSync()
   else _detachSync()
 }, { immediate: true })

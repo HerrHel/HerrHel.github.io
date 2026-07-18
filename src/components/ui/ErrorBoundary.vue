@@ -1,17 +1,24 @@
 <template>
   <slot v-if="!errored" />
-  <div v-else class="error-boundary-fallback">
+  <div
+    v-else
+    class="error-boundary-fallback"
+    role="alert"
+    aria-live="assertive"
+    tabindex="-1"
+    ref="fallbackRef"
+  >
     <div class="error-boundary-icon">⚠</div>
     <h3>出错了</h3>
     <p>{{ errorMsg }}</p>
     <!-- A6-002：生产不渲染 stack；仅 dev 或 ?debug=1 可见 -->
     <pre v-if="showStack && errStack" style="font-size:11px;max-height:200px;overflow:auto;text-align:left">{{ errStack }}</pre>
-    <button class="btn btn-secondary" @click="reload">重试</button>
+    <button ref="retryBtnRef" class="btn btn-secondary" @click="reload">重试</button>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onErrorCaptured } from 'vue'
+import { ref, nextTick, onErrorCaptured } from 'vue'
 import { reportError } from '../../lib/errorReporter.js'
 import { useE2EStore } from '../../stores/e2e.js'
 
@@ -20,6 +27,8 @@ const props = defineProps<{ name?: string }>()
 const errored = ref(false)
 const errorMsg = ref('')
 const errStack = ref('')
+const fallbackRef = ref<HTMLElement | null>(null)
+const retryBtnRef = ref<HTMLButtonElement | null>(null)
 // A6-002：stack 仅诊断，不进生产 DOM
 const showStack = import.meta.env.DEV ||
   (typeof location !== 'undefined' && /[?&]debug=1\b/.test(location.search))
@@ -45,6 +54,11 @@ onErrorCaptured((err: Error) => {
       try { resolve(false) } catch { /* ignore */ }
     }
   } catch { /* store 未就绪 */ }
+  // A6-006：读屏播报 + 焦点落到「重试」
+  nextTick(() => {
+    retryBtnRef.value?.focus()
+    if (document.activeElement !== retryBtnRef.value) fallbackRef.value?.focus()
+  })
   return false // 阻止继续传播（防白屏），上报已在上面完成
 })
 

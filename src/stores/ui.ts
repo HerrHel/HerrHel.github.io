@@ -100,7 +100,8 @@ export const useUIStore = defineStore('ui', {
     excludedAttrs: [],
     detailCards: [],
     editingId: null,
-    themeMode: 'auto',
+    // D1-004：默认 manual，与 theme.ts 缺省 lv_themeMode 一致
+    themeMode: 'manual',
     themeStyle: 'premium',
     historyItemId: '',
     historyItemType: 'bookmark',
@@ -246,6 +247,9 @@ export const useUIStore = defineStore('ui', {
         // 与 theme.ts 已设的 DOM 态对齐，单一真相源不污染 saveUIState。
         const ts = localStorage.getItem('lv_themeStyle')
         if (ts === 'comfortable' || ts === 'premium') this.themeStyle = ts
+        // D1-004：themeMode 同样以 lv_themeMode 为真相源，避免面板默认误显「跟随系统」
+        const tm = localStorage.getItem('lv_themeMode')
+        this.themeMode = tm === 'auto' ? 'auto' : 'manual'
       } catch (e) { console.warn('[LinkVault] Failed to restore UI state:', (e as Error).message) }
     },
   },
