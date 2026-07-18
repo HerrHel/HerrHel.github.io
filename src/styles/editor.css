@@ -127,18 +127,21 @@
 
 /* ==================== MOBILE FLOATING FORMAT BAR ==================== */
 .mfb{
-  position:fixed;left:0;right:0;bottom:0;z-index:9999;
+  /* B2-002：z-index 降到 2500，避免盖住 modal/confirm（~3000+） */
+  /* B2-004：隐藏时 pointer-events:none，避免透明底栏拦截点击 */
+  position:fixed;left:0;right:0;bottom:0;z-index:2500;
   display:flex;align-items:center;gap:4px;
   padding:6px 10px env(safe-area-inset-bottom,8px);
   background:var(--surface);border-top:1px solid var(--border);
   overflow-x:auto;scrollbar-width:none;
   transform:translateY(100%);opacity:0;
+  pointer-events:none;
   transition:transform .2s var(--ease-out),opacity .18s var(--ease-out);
   box-shadow:var(--shadow-md);
   -webkit-overflow-scrolling:touch;
 }
 .mfb::-webkit-scrollbar{display:none}
-.mfb.visible{transform:translateY(0);opacity:1}
+.mfb.visible{transform:translateY(0);opacity:1;pointer-events:auto}
 .mfb .ft-btn{min-width:30px;height:30px}
 .mfb .ft-color-btn{position:relative}
 .mfb-color-dot{
