@@ -16,6 +16,9 @@ jobs:
       - run: npm ci
       - name: Lint
         run: npm run lint
+      # F2-006：类型检查进入门禁
+      - name: Typecheck
+        run: npm run typecheck
       - name: Unit Tests
         run: npm run test
       # F2-001：audit 必须 blocking；豁免请用正式 allowlist，禁止 || true 吞错

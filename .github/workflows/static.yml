@@ -28,6 +28,9 @@ jobs:
         run: npm ci
       - name: Lint
         run: npm run lint
+      # F2-006：部署前类型检查
+      - name: Typecheck
+        run: npm run typecheck
       - name: Unit Tests
         run: npm run test
       # F2-001：部署前 audit 必须 blocking

@@ -7,12 +7,13 @@ export const EncryptedPasswordSchema = z.object({
   salt: z.string(),
 })
 
-/** D2-004：数字语义字段——字符串可 coerce，非法再兜 0 */
+/** D2-004：数字语义字段——字符串可 coerce，非法再兜 0；动态默认用函数 catch */
 function coerceNum(fallback: number | (() => number) = 0) {
+  const catchDef = typeof fallback === 'function' ? fallback : () => fallback
   return z.preprocess(
     (v) => (typeof v === 'string' && v.trim() !== '' && !Number.isNaN(Number(v)) ? Number(v) : v),
     z.number(),
-  ).catch(fallback)
+  ).catch(catchDef)
 }
 
 /** attributes：先 strip 非 boolean 键，整表非法再 {} */

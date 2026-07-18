@@ -148,7 +148,13 @@ export function getTagNames(item: Bookmark | SiblingGroup, customAttributes: Cus
 const CATEGORY_COLORS = ['#122E8A', '#E63948', '#d97706', '#7c3aed', '#0d9488', '#db2777', '#2563eb', '#059669']
 
 export function createCategory(name: string): Category {
-  return { id: gid(), name, icon: 'star', color: CATEGORY_COLORS[Math.floor(Math.random() * CATEGORY_COLORS.length)] }
+  return {
+    id: gid(),
+    name,
+    icon: 'star',
+    color: CATEGORY_COLORS[Math.floor(Math.random() * CATEGORY_COLORS.length)],
+    order: Date.now(),
+  }
 }
 
 export function addNewCategory(name: string, store: AppStore): Category | null {

@@ -17,6 +17,8 @@ type IFuseOptions = {
   threshold?: number
   distance?: number
   includeScore?: boolean
+  // D1-001：Fuse includeMatches 开启后才有 matches 供高亮
+  includeMatches?: boolean
   minMatchCharLength?: number
   ignoreLocation?: boolean
   findAllMatches?: boolean
