@@ -12,6 +12,10 @@ import '@tiptap/extension-heading'
 // ---------- Editor Registry ----------
 const _editors: Record<string, Editor> = {}
 
+/** G1-003：silent setContent 期间为 true，GroupEditor onUpdate 应跳过 syncToStore/_markDirty */
+let _silentContentDepth = 0
+export function isSilentSetContent(): boolean { return _silentContentDepth > 0 }
+
 interface IEditorManager {
   register(gid: string, editor: Editor): void
   unregister(gid: string): void
@@ -23,6 +27,8 @@ interface IEditorManager {
   deleteNode(gid: string, attrName: string, attrValue: string): void
   insertAtCoords(gid: string, html: string, clientX: number, clientY: number): boolean
   insertText(gid: string, text: string): boolean
+  /** 远端/程序化写回 notes：不触发 onUpdate→syncToStore 标脏回推 */
+  silentSetContent(gid: string, html: string): boolean
 }
 
 const editorManager: IEditorManager = {
@@ -58,6 +64,21 @@ const editorManager: IEditorManager = {
     return this.insertInlineCardHTML(gid, html)
   },
   insertText: function (gid: string, text: string): boolean { const ed = _editors[gid]; if (!ed) return false; try { ed.chain().insertContent(text).run(); return true } catch (_) { return false } },
+
+  silentSetContent: function (gid: string, html: string): boolean {
+    const ed = _editors[gid]
+    if (!ed) return false
+    _silentContentDepth++
+    try {
+      ed.commands.setContent(html)
+      return true
+    } catch (e: unknown) {
+      console.warn('[Editor] silentSetContent error:', e instanceof Error ? e.message : e)
+      return false
+    } finally {
+      _silentContentDepth--
+    }
+  },
 }
 
 export const EditorManager = editorManager

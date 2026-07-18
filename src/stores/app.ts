@@ -17,8 +17,10 @@ import type { Bookmark, SiblingGroup, Category, CustomAttribute, AppData } from 
 export const useAppStore = defineStore('app', () => {
   const ds = () => useDataStore()
   const ui = () => useUIStore()
-  // 隐私模式 / IDB 配额满 toast 只弹一次（flag 保证不刷屏）。
+  // 隐私模式 / IDB 配额满：首次必 toast；持续失败时每 STORAGE_FAIL_REMIND_MS 再提醒（G1-004）
   let _storageFailWarned = false
+  let _lastStorageFailToastAt = 0
+  const STORAGE_FAIL_REMIND_MS = 5 * 60 * 1000
   // PERF-3：上次成功写入的快照指纹，相同则跳过 Zod/双写
   let _lastSavedFingerprint = ''
 
@@ -156,15 +158,18 @@ export const useAppStore = defineStore('app', () => {
       persist.saveData(parsed.data).then(ok => {
         if (ok) {
           _lastSavedFingerprint = fp
-          // H11 修复：IDB 配额满/隐私模式下 saveData 持续返回 false，但 _storageFailWarned
-          // 一旦置 true 永不重置，后续持续失败静默，用户继续增删书签数据仅存活于内存，
-          // 刷新即全部丢失却再无任何提示。写入恢复成功即清旗标，让"恢复→再失败"能重新提示，
-          // 既保留"单次失败只弹一次避免刷屏"语义，又能在存储恢复后重新具备告警能力。
+          // H11：写入恢复成功即清旗标，让「恢复→再失败」能重新提示
           _storageFailWarned = false
-        }
-        if (!ok && !_storageFailWarned) {
-          _storageFailWarned = true
-          toast('⚠️ 存储不可用（如隐私模式/配额满），刷新后数据可能丢失', false)
+          _lastStorageFailToastAt = 0
+        } else {
+          // G1-004：持续失败时按间隔重复显著提示，禁止只 toast 一次后静默丢写
+          const now = Date.now()
+          const due = !_storageFailWarned || (now - _lastStorageFailToastAt >= STORAGE_FAIL_REMIND_MS)
+          if (due) {
+            _storageFailWarned = true
+            _lastStorageFailToastAt = now
+            toast('⚠️ 存储不可用（如隐私模式/配额满），刷新后数据可能丢失，请尽快导出备份', false)
+          }
         }
       })
       if (d._saveCount % 10 === 0) useUndoStore().cleanStale()
