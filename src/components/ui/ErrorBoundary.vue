@@ -11,8 +11,10 @@
 
 <script setup lang="ts">
 import { ref, onErrorCaptured } from 'vue'
+import { reportError } from '../../lib/errorReporter.js'
+import { useE2EStore } from '../../stores/e2e.js'
 
-defineProps<{ name?: string }>()
+const props = defineProps<{ name?: string }>()
 
 const errored = ref(false)
 const errorMsg = ref('')
@@ -22,8 +24,24 @@ onErrorCaptured((err: Error) => {
   errored.value = true
   errorMsg.value = err.message || '未知错误'
   errStack.value = (err.stack || '').split('\n').slice(0, 6).join('\n')
-  console.error('[ErrorBoundary]', err)
-  return false // 阻止继续传播
+  console.error('[ErrorBoundary]', props.name || 'boundary', err)
+  // A6-001：return false 会阻断 app.config.errorHandler；此处主动上报，消除监控黑洞
+  try {
+    reportError({
+      message: err.message || String(err),
+      stack: err.stack,
+      component: props.name ? `ErrorBoundary:${props.name}` : 'ErrorBoundary',
+    })
+  } catch { /* 上报失败不影响回退 UI */ }
+  // A6-003：边界捕获时 drain pendingUnlock，避免 E2E 解锁 Promise 永挂
+  try {
+    const e2e = useE2EStore()
+    const pending = e2e.pendingUnlock.splice(0)
+    for (const resolve of pending) {
+      try { resolve(false) } catch { /* ignore */ }
+    }
+  } catch { /* store 未就绪 */ }
+  return false // 阻止继续传播（防白屏），上报已在上面完成
 })
 
 function reload() {

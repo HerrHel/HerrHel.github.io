@@ -1,4 +1,5 @@
 <template>
+<!-- E2-001：Auth/Toast/Confirm 常驻在 Share 与 MainLayout 共同父级，分享页「登录后复制」可用 -->
 <ShareView v-if="shareGroupId" :group-id="shareGroupId" @close="shareGroupId = null" />
 <template v-else>
 <ErrorBoundary name="MainLayout">
@@ -42,16 +43,14 @@
   <GroupEditModal />
 </template>
 <TrashPanel :open="store.panels.trash" @close="store.panels.trash = false" />
-<ConfirmModal />
 <HistoryPanel :open="store.panels.history" :item-id="store.historyItemId" :item-type="store.historyItemType" @close="store.panels.history = false" />
-<AuthModal />
 <E2ESetupModal :open="store.modals.e2eSetup" @close="store.modals.e2eSetup = false" />
 <E2EUnlockModal :open="store.modals.e2eUnlock" @close="onE2EClose" @unlocked="onE2EUnlocked" />
 <SetupGuide />
 </ErrorBoundary>
 
 <ErrorBoundary name="Overlays">
-<ContextMenu /><ActionSheet /><ToastContainer /><FormatToolbar /><MentionDropdown />
+<ContextMenu /><ActionSheet /><FormatToolbar /><MentionDropdown />
 <AddPopover />
 <DeadLinksPopover />
 <SyncConflictBanner />
@@ -63,6 +62,10 @@
 <div class="overlay" id="railOverlay" :class="{ show: store.panels.rail }" @click="closeRail"></div>
 </ErrorBoundary>
 </template>
+<!-- 全局覆盖层：Share 路由与主布局共用 -->
+<ConfirmModal />
+<AuthModal />
+<ToastContainer />
 </template>
 
 <script setup lang="ts">
