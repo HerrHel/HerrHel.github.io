@@ -175,17 +175,20 @@ function bindDesktop() {
 function unbindDesktop() {
   document.removeEventListener('click', onDocClick, true)
 }
+// A5-002：不覆盖 mfbStore.show/hide，watch open 驱动本组件可见副作用
+let _mfbWatchStop: (() => void) | null = null
 function bindMobile() {
   document.addEventListener('touchstart', _mfbOnDocTouch, true)
+  if (_mfbWatchStop) { _mfbWatchStop(); _mfbWatchStop = null }
   const mfb = useMfbStore()
-  mfb.show = show
-  mfb.hide = hide
+  _mfbWatchStop = watch(() => mfb.open, (open) => {
+    if (open) show()
+    else hide()
+  }, { immediate: true })
 }
 function unbindMobile() {
   document.removeEventListener('touchstart', _mfbOnDocTouch, true)
-  const mfb = useMfbStore()
-  mfb.show = () => {}
-  mfb.hide = () => {}
+  if (_mfbWatchStop) { _mfbWatchStop(); _mfbWatchStop = null }
   hide()
 }
 

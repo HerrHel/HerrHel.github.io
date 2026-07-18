@@ -94,7 +94,11 @@ export function useAppLifecycle() {
     const onSaveUI = () => ui.saveUIState()
     const onClearSel = () => window.getSelection()?.removeAllRanges()
     const onVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') flushAndSave()
+      if (document.visibilityState === 'hidden') {
+        flushAndSave()
+        // A4-005：切后台/杀进程前落盘 UI 偏好
+        ui.saveUIState()
+      }
     }
     window.addEventListener('beforeunload', flushAndSave)
     window.addEventListener('beforeunload', onSaveUI)

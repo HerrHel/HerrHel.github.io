@@ -144,8 +144,9 @@ export const useUIStore = defineStore('ui', {
     /** 全选批量模式下的所有项 */
     selectAllBatch() {
       const ds = useDataStore()
+      // A4-004：仅顶层可见卡 + 组；子书签由删除/移动路径 collectSubIds 显式展开
       this.batchSelected = [
-        ...ds.filteredBookmarks.map(b => b.id),
+        ...ds.filteredBookmarks.filter(b => !b.parentId).map(b => b.id),
         ...ds.filteredGroups.map(g => 'group:' + g.id)
       ]
     },
