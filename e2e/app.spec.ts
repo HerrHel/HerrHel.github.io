@@ -33,7 +33,7 @@ test.describe('LinkVault 核心功能', () => {
   test('布局切换（设置抽屉强断言）', async ({ page }) => {
     await page.goto('/')
     await expect(page.locator('#cardGrid')).toBeAttached({ timeout: 10000 })
-    await page.keyboard.press('Control+,')
+    await page.locator('#btnSettings').click()
     const settingsPanel = page.locator('.settings-drawer, .settings-drawer-wrap').first()
     await expect(settingsPanel).toBeVisible({ timeout: 5000 })
     const listBtn = page.locator('button[title*="列表"], .sp-seg-btn').filter({ hasText: /.*/ }).last()
@@ -81,11 +81,15 @@ test.describe('LinkVault 核心功能', () => {
   test('键盘快捷键不崩溃', async ({ page }) => {
     await page.goto('/')
     await expect(page.locator('#cardGrid')).toBeAttached({ timeout: 10000 })
-    await page.keyboard.press('Control+,')
+    // C1-001：产品无 Control+,；设置用 #btnSettings；已实现快捷键 Ctrl+N / Ctrl+K
+    await page.locator('#btnSettings').click()
     await expect(page.locator('.settings-drawer, .settings-drawer-wrap').first()).toBeVisible({ timeout: 5000 })
     await page.keyboard.press('Escape')
     await page.keyboard.press('Control+n')
     await expect(page.locator('.modal, .modal-mask, [class*="modal"]').first()).toBeVisible({ timeout: 5000 })
+    await page.keyboard.press('Escape')
+    await page.keyboard.press('Control+k')
+    await expect(page.locator('.cmd-mask.open, .cmd-palette').first()).toBeVisible({ timeout: 5000 })
     await page.keyboard.press('Escape')
     await expect(page.locator('.error-boundary-fallback')).not.toBeVisible()
   })
