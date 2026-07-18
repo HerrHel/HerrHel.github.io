@@ -22,6 +22,7 @@ import { visit, openBmModal, deleteBookmarkWithUndo } from '../../composables/do
 import { openDetail, deleteCategory, deleteAttribute, openCatModal } from '../../composables/ui/useUI.js'
 import { editGroup, deleteGroup, removeBmFromGroup, createGroup } from '../../composables/domain/useGroup.js'
 import { shareGroup } from '../../composables/domain/useDataShare.js'
+import { toggleBatchMode } from '../../composables/domain/useBatch.js'
 
 const store = useAppStore()
 const ctx = useContextMenuStore()
@@ -100,6 +101,13 @@ function _dispatchAction(type: string, action: string, id: string) {
     if (action === ACTIONS.EDIT) openBmModal(id)
     if (action === ACTIONS.DELETE) deleteBookmarkWithUndo(id)
     if (action === ACTIONS.HISTORY) { store.historyItemId = id; store.historyItemType = 'bookmark'; store.panels.history = true }
+    // A3-001：补齐移动到 / 多选分发（与 group 路径一致）
+    if (action === ACTIONS.MOVE_TO_CAT) useActionSheetStore().showBmCategoryPicker(id)
+    if (action === ACTIONS.MULTI_SELECT) {
+      const ui = store // app facade 暴露 batch
+      if (!ui.batchMode) toggleBatchMode()
+      if (id && !ui.batchSelected.includes(id)) ui.batchSelected.push(id)
+    }
   } else if (type === 'sub') {
     if (action === ACTIONS.VISIT) openDetail(id)
     if (action === ACTIONS.EDIT) openBmModal(id)
@@ -134,6 +142,8 @@ function _dispatchAction(type: string, action: string, id: string) {
   } else if (type === 'grid-empty') {
     if (action === ACTIONS.ADD_BOOKMARK) openBmModal()
     if (action === ACTIONS.ADD_GROUP) createGroup()
+    // A3-001：空白网格右键「多选」
+    if (action === ACTIONS.MULTI_SELECT) toggleBatchMode()
   } else if (type === 'rail-empty') {
     if (action === ACTIONS.ADD_CAT) { openCatModal(); setTimeout(() => document.getElementById('newCatName')?.focus(), 200) }
   }

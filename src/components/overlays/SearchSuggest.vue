@@ -18,6 +18,8 @@
 import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import { useUIStore } from '../../stores/ui.js'
 import { useDataStore } from '../../stores/data.js'
+import { useToastStore } from '../../stores/toast.js'
+import { useAuthStore } from '../../stores/auth.js'
 import { favicon, domain } from '../../utils.js'
 import { openBookmark } from '../../composables/domain/useBookmark.js'
 import { toggleGroupFocus } from '../../composables/domain/useGroup.js'
@@ -28,6 +30,8 @@ import type { SearchResultItem, HighlightSegment } from '../../lib/search.js'
 
 const ui = useUIStore()
 const dataStore = useDataStore()
+const toastStore = useToastStore()
+const authStore = useAuthStore()
 const visible = ref(false)
 const activeIdx = ref(-1)
 
@@ -92,8 +96,15 @@ function onDocClick(e: MouseEvent) { if (!(e.target as HTMLElement).closest('.se
 function onFocusIn(e: FocusEvent) { if ((e.target as HTMLElement).matches('.search-input')) updateVisibility() }
 
 function onKeydown(e: KeyboardEvent) {
-  // M11：任一模态框打开时不抢 ArrowDown/Enter，避免 BookmarkModal 等输入框被劫持
-  if (ui.modals.bookmark || ui.modals.category || ui.modals.attribute || ui.modals.groupEdit) return
+  // A3-003 / M11：任一 modal / 面板 / 确认框 / Auth / 命令面板打开时不抢键
+  if (
+    ui.modals.bookmark || ui.modals.category || ui.modals.attribute || ui.modals.groupEdit ||
+    ui.modals.e2eSetup || ui.modals.e2eUnlock || ui.modals.setupGuide ||
+    ui.panels.settings || ui.panels.trash || ui.panels.history || ui.panels.shortcutHelp ||
+    ui.overlays.deadLinks || ui.overlays.addPopover ||
+    toastStore.confirmOpen || authStore.authModalOpen ||
+    document.querySelector('.cmd-mask.open')
+  ) return
   if (!visible.value) return
   const len = results.value.filter(r => !r._divider).length
   if (e.key === 'ArrowDown') {
