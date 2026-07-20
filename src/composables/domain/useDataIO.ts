@@ -15,6 +15,8 @@ import { AppDataSchema, BookmarkSchema, SiblingGroupSchema, CategorySchema, Cust
 import { clearSearchCache } from '../../lib/search.js'
 import { DEFAULTS } from '../../config/constants.js'
 import { runMigrations } from '../../stores/migrations.js'
+import { clearAllSyncOps } from '../../stores/storage.js'
+import { __testPendingSync } from './syncPending.js'
 import type { AppData, Bookmark } from '../../types.js'
 
 // ── 导出 ──
@@ -521,19 +523,10 @@ export async function resetToDefaults() {
     ds._deletedIds.clear()
     ds._changedFields.clear()
     ds._customCardOrder = null
-    try {
-      const { clearSearchCache } = await import('../../lib/search.js')
-      clearSearchCache()
-    } catch { /* ignore */ }
+    clearSearchCache()
     ds._bumpSearchVersion()
-    try {
-      const { clearAllSyncOps } = await import('../../stores/storage.js')
-      await clearAllSyncOps()
-    } catch { /* ignore */ }
-    try {
-      const { __testPendingSync } = await import('./useCloudSync.js')
-      __testPendingSync.clear()
-    } catch { /* ignore */ }
+    try { await clearAllSyncOps() } catch { /* ignore */ }
+    try { __testPendingSync.clear() } catch { /* ignore */ }
     ui.curCat = 'all'
     ui.focusedGroupId = null
     ui.activeAttrs = []
