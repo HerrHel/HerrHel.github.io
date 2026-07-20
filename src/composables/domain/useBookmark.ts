@@ -7,6 +7,7 @@ import { favicon, domain, fixUrl } from '../../utils.js'
 
 import { toast, toastWithUndo, showConfirm } from '../../lib/toast.js'
 import { collectDescendantIds } from '../../lib/collectSubIds.js'
+import { newBookmarkId } from '../../lib/newId.js'
 import { pushNavState } from '../interaction/useKeyboardOps.js'
 import { previewIconUrl as previewIconUrlBase, clearIcon as clearIconBase } from '../ui/useIconPreview.js'
 import { suggestCategory, suggestAttributes } from '../../lib/ai-classify.js'
@@ -253,7 +254,7 @@ export async function saveBm() {
       toast('书签已更新')
     } else {
       const newBm = data as Bookmark
-      newBm.id = 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
+      newBm.id = newBookmarkId()
       // order 用「现存最大 order + 1」而非 ds.bookmarks.length：length 在永久删除（回收站清空、
       // 数组物理移除）后会缩短，新值可能与现存项 order 重复，自定义排序下两条同 order 抖动。
       // max+1 只取现存项，永久删后仍唯一。与 saveFromExtension 同策略（见其注释）。
@@ -435,7 +436,7 @@ export function saveFromExtension(url: string, title?: string, notes?: string): 
     return false
   }
 
-  const id = 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
+  const id = newBookmarkId()
   const dm = domain(safeUrl)
   const newBm: Bookmark = {
     id,

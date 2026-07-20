@@ -17,6 +17,7 @@ import { DEFAULTS } from '../../config/constants.js'
 import { runMigrations } from '../../stores/migrations.js'
 import { clearAllSyncOps } from '../../stores/storage.js'
 import { __testPendingSync } from './syncPending.js'
+import { newBookmarkId } from '../../lib/newId.js'
 import type { AppData, Bookmark } from '../../types.js'
 
 // ── 导出 ──
@@ -247,7 +248,7 @@ export function importFromDataInternal(data: Partial<AppData>, source: string) {
     if (existingUrls.has(b.url.toLowerCase())) continue
     const now = Date.now()
     const parsed = BookmarkSchema.safeParse({
-      id: b.id || 'b' + now.toString(36) + Math.random().toString(36).slice(2, 6),
+      id: b.id || newBookmarkId(bmImported),
       title: b.title,
       url: b.url,
       username: b.username || '',
@@ -323,7 +324,7 @@ export function parseRaindropJSON(data: unknown): Bookmark[] {
   return items.filter((item: unknown) => { const r = item as Record<string, unknown>; return r.link || r.url }).map((item: unknown, i: number) => {
     const r = item as Record<string, unknown>
     return {
-    id: 'b' + (now + i).toString(36) + Math.random().toString(36).slice(2, 6),
+    id: newBookmarkId(i),
     title: (r.title as string) || (r.link as string) || '',
     url: (r.link as string) || (r.url as string) || '',
     notes: (r.excerpt as string) || (r.note as string) || '',
@@ -373,7 +374,7 @@ function parseBookmarkHTML(html: string): Bookmark[] {
           const addDate = parseInt(a.getAttribute('add_date') || '0', 10) || 0
           const icon = a.getAttribute('icon') || ''
           bookmarks.push({
-            id: 'b' + now.toString(36) + Math.random().toString(36).slice(2, 6) + bookmarks.length,
+            id: newBookmarkId(bookmarks.length),
             title, url: href,
             username: '', password: '',
             notes: currentCategory !== '导入的书签' ? `[${currentCategory}]` : '',
@@ -459,7 +460,7 @@ function parseCSV(text: string): Bookmark[] {
       }
     }
     bookmarks.push({
-      id: 'b' + now.toString(36) + Math.random().toString(36).slice(2, 6) + r,
+      id: newBookmarkId(r),
       title, url,
       username: '', password: '',
       notes, icon: '',
