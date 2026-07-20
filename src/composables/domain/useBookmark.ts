@@ -6,6 +6,7 @@ import { saveAppData, debouncedSaveAppData } from '../../stores/app.js'
 import { favicon, domain, fixUrl } from '../../utils.js'
 
 import { toast, toastWithUndo, showConfirm } from '../../lib/toast.js'
+import { collectDescendantIds } from '../../lib/collectSubIds.js'
 import { pushNavState } from '../interaction/useKeyboardOps.js'
 import { previewIconUrl as previewIconUrlBase, clearIcon as clearIconBase } from '../ui/useIconPreview.js'
 import { suggestCategory, suggestAttributes } from '../../lib/ai-classify.js'
@@ -384,16 +385,7 @@ function collectSubIds(id: string): string[] {
   const ds = useDataStore()
   const cm = ds.childrenMap
   if (cm && Object.keys(cm).length > 0) {
-    const ids: string[] = [id]
-    const stack = [id]
-    while (stack.length) {
-      const pid = stack.pop()!
-      const children = cm[pid]
-      if (children) {
-        for (const c of children) { ids.push(c.id); stack.push(c.id) }
-      }
-    }
-    return ids
+    return collectDescendantIds(pid => cm[pid], id)
   }
   // Fallback for when childrenMap is not available (e.g. in tests)
   let ids = [id]
