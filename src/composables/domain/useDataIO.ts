@@ -18,6 +18,7 @@ import { runMigrations } from '../../stores/migrations.js'
 import { clearAllSyncOps } from '../../stores/storage.js'
 import { __testPendingSync } from './syncPending.js'
 import { newBookmarkId } from '../../lib/newId.js'
+import { cloneDeep } from '../../lib/clone.js'
 import type { AppData, Bookmark } from '../../types.js'
 
 // ── 导出 ──
@@ -505,13 +506,13 @@ export async function resetToDefaults() {
   const ok = await showConfirm(msg)
   if (!ok) return
   const snapshot = {
-      categories: JSON.parse(JSON.stringify(ds.categories)),
-      bookmarks: JSON.parse(JSON.stringify(ds.bookmarks)),
-      customAttributes: JSON.parse(JSON.stringify(ds.customAttributes)),
-      siblingGroups: JSON.parse(JSON.stringify(ds.siblingGroups)),
+      categories: cloneDeep(ds.categories),
+      bookmarks: cloneDeep(ds.bookmarks),
+      customAttributes: cloneDeep(ds.customAttributes),
+      siblingGroups: cloneDeep(ds.siblingGroups),
       curCat: ui.curCat,
     }
-    const d = JSON.parse(JSON.stringify(DEFAULTS))
+    const d = cloneDeep(DEFAULTS)
     ds.categories = d.categories
     ds.bookmarks = d.bookmarks
     ds.customAttributes = d.customAttributes

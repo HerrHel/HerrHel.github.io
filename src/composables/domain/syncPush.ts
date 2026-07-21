@@ -15,6 +15,7 @@ import { toRemoteRow, camelToSnake } from './useSyncMapping.js'
 import { _saveHistory, _getUserId } from './useSyncHistory.js'
 import { getSyncRemotePort } from './syncRemotePort.js'
 import { _markPendingSync, _clearPendingSync } from './syncPending.js'
+import { cloneDeep } from '../../lib/clone.js'
 
 /** 单条 sync op 最大推送重试次数 */
 export const MAX_PUSH_RETRIES = 3
@@ -292,7 +293,7 @@ export async function pushFromQueue(): Promise<boolean> {
         console.warn(`[sync] push 失败 table=${f.table} id=${f.itemId} error=${f.error}`)
       }
       const first = failedOps[0]
-      if (first?.op?.data) console.warn(`[sync] 首条失败 op 原始 data:`, JSON.parse(JSON.stringify(first.op.data)))
+      if (first?.op?.data) console.warn(`[sync] 首条失败 op 原始 data:`, cloneDeep(first.op.data))
       syncStore.setSyncStatus('error')
       syncStore.setSyncError(`${failedOps.length} 项推送失败：${failedOps[0].error}`)
       return false
