@@ -20,17 +20,19 @@ import { cloneDeep } from '../../lib/clone.js'
 /** 单条 sync op 最大推送重试次数 */
 export const MAX_PUSH_RETRIES = 3
 
-const SENSITIVE_FIELDS: Record<string, readonly string[]> = {
-  bookmarks: ['username', 'notes'],
-  sibling_groups: ['name', 'notes'],
-  categories: [],
-  custom_attributes: [],
-}
+/**
+ * 锁定态判定所用的敏感字段表,复用 useE2E 的 ENCRYPT_FIELDS 单一来源,
+ * 通过 tableToEntityType 把表名映射到 EntityType 查表。避免两份硬编码漂移
+ * (一处新增敏感字段另一处漏加 → 锁定态把仍加密的旧密文/明文敏感内容误推云)。
+ */
+import { ENCRYPT_FIELDS } from './useE2E.js'
+import { tableToEntityType, type TableName } from './syncMappingTables.js'
 
 /** 锁定态下该 upsert op 是否需要等解锁才能安全推送 */
 export function _opNeedsUnlock(op: SyncOp): boolean {
   if (!op.data) return false
-  const sens = SENSITIVE_FIELDS[op.table]
+  const type = tableToEntityType[op.table as TableName]
+  const sens: readonly string[] | undefined = type ? ENCRYPT_FIELDS[type] : undefined
   if (!sens || sens.length === 0) return false
   const data = op.data as Record<string, unknown>
   const changedFields = data._changedFields as string[] | null
